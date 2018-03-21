@@ -10,14 +10,25 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The wilcox_test R-package implements a Bayesian Alternative to the Wilcoxon 
-Signed Rank test and is intended as an addition to the BayesianFirstAid package
-[@baath2014bayesian].
-Use as example for structure, etc: [@lee2013carbayes]. 
+The **wilcox_test** R-package implements a Bayesian Alternative to the Wilcoxon 
+Signed Rank test and is intended as an addition to the **BayesianFirstAid** 
+package [@baath2014bayesian]. The approach follows [@gelman2014bayesian, p. 97],
+who  suggest a three-step methodology for a Bayesian approach to the Wilcoxon 
+test. Following this methodology, the **wilcox.test** function first transforms 
+the combined input data to their ranks as in the conventional Wilcoxon 
+procedure. Then, these ranks are normalized into z-scores, and the difference 
+between the two groups is modeled as a normal distribution with uninformative 
+priors. This approach has the following advantages: ... 
 
-## Vignette Info
+## Introduction
 
 Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+
+## A Bayesian Alternative to the Wilcoxon
+
+### The frequentist Wilcoxon Test
+
+
 
 ## Styles
 
