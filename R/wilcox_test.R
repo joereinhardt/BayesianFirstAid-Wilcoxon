@@ -213,6 +213,7 @@ model.code.bayes_wilcox_test <- function(fit) {
 
 # Not to be run, just to be printed - adapted from two_sample_t_test_model_code
 wilcox_model_code <- function(x, y) {
+  d <- NULL
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
 
