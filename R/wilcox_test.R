@@ -35,7 +35,6 @@
 #'
 #' @export
 
-
 #Note: needs to take same input as wilcox.test()
 
 bayes.wilcox.test <- function(x, y, cred.mass = 0.95, mu = 0, n.iter = 30000,
@@ -119,14 +118,15 @@ jags_wilcox_test <- function(d, n.chains = 3, n.update = 500, n.iter = 5000,
 
 ### wilcox test S3 methods ###
 
-print.bayes_wilcox_test <- function(object, ...) {
-  s <- format_stats(object$stats)
+#' @export
+print.bayes_wilcox_test <- function(x, ...) {
+  s <- format_stats(x$stats)
 
   cat("\n")
   cat("\tBayesian First Aid Wilcoxon test\n")
   cat("\n")
-  cat("data: ", object$x_name, " (n = ", length(object$x) ,") and ",
-      object$y_name, " (n = ", length(object$y) ,")\n", sep = "")
+  cat("data: ", x$x_name, " (n = ", length(x$x) ,") and ",
+      x$y_name, " (n = ", length(x$y) ,")\n", sep = "")
   cat("\n")
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep = "")
   cat("difference of the means: ", s["mu", "median"], " [", s["mu", "HDIlo"],
@@ -140,6 +140,7 @@ print.bayes_wilcox_test <- function(object, ...) {
   invisible(NULL)
 }
 
+#' @export
 summary.bayes_wilcox_test <- function(object, ...) {
   s <- round(object$stats, 3)
   ##Issues: Is sigma relevant here? x_pred / y_pred (diff_pred)?
@@ -173,18 +174,19 @@ summary.bayes_wilcox_test <- function(object, ...) {
 }
 
 #adapted from plot.bayes_binom_test
-plot.bayes_wilcox_test <- function(object, ...) {
+#' @export
+plot.bayes_wilcox_test <- function(x, ...) {
   old_par <- par( mar = c(3.5,3.5,2.5,0.5),
                   mgp = c(2.25,0.7,0),
                   mfcol = c(1,1))
-  stats <- object$stats
-  mcmc_samples <- object$mcmc_samples
+  stats <- x$stats
+  mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)
   mu = samples_mat[,"mu"]
-  sample_mat <- as.matrix(object$mcmc_samples)
-  xlim = range(c(mu, object$comp))
-  plotPost(sample_mat[, "mu"], cred_mass = object$cred_mass,
-           comp_val = object$comp, xlim = xlim, cex = 1, cex.lab = 1.5,
+  sample_mat <- as.matrix(x$mcmc_samples)
+  xlim = range(c(mu, x$comp))
+  plotPost(sample_mat[, "mu"], cred_mass = x$cred_mass,
+           comp_val = x$comp, xlim = xlim, cex = 1, cex.lab = 1.5,
            main = "Difference in means",
            xlab = expression(mu_diff), show_median = TRUE)
   #hist_data <- discrete_hist(sample_mat[, "x_pred"], c(0, x$n),
@@ -198,6 +200,15 @@ plot.bayes_wilcox_test <- function(object, ...) {
 
 #Adapted from model.code.bayes_binom_test
 #output code not yet running!
+#' Prints code that replicates the model you just ran.
+#'
+#' This is good if you better want to understand how the model is
+#' implemented or if you want to run a modified version of the code.
+#'
+#'
+#' @param fit The output from a Bayesian First Aid model.
+#'
+#' @export
 model.code.bayes_wilcox_test <- function(fit) {
   cat("### Model code for the Bayesian First Aid alternative to the binomial",
       "test ###\n\n")
@@ -256,6 +267,11 @@ wilcox_model_code <- inject_model_string(wilcox_model_code,
 
 
 #adapted from diagnostics.bayes_two_sample_t_test
+#' Plots and prints diagnostics regarding the convergence of the model.
+#'
+#' @param fit The output from a Bayesian First Aid model.
+#'
+#' @export
 diagnostics.bayes_wilcox_test <- function(fit) {
   print_mcmc_info(fit$mcmc_samples)
   cat("\n")
