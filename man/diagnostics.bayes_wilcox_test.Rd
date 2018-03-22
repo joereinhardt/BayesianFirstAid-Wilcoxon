@@ -4,10 +4,10 @@
 \alias{diagnostics.bayes_wilcox_test}
 \title{Plots and prints diagnostics regarding the convergence of the model.}
 \usage{
-diagnostics.bayes_wilcox_test(fit)
+diagnostics.bayes_wilcox_test(x)
 }
 \arguments{
-\item{fit}{The output from a Bayesian First Aid model.}
+\item{x}{The output from a Bayesian First Aid model.}
 }
 \description{
 Plots and prints diagnostics regarding the convergence of the model.
