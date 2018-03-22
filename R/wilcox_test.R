@@ -140,6 +140,7 @@ print.bayes_wilcox_test <- function(x, ...) {
   invisible(NULL)
 }
 
+#' @method summary bayes_wilcox_test
 #' @export
 summary.bayes_wilcox_test <- function(object, ...) {
   s <- round(object$stats, 3)
@@ -207,8 +208,10 @@ plot.bayes_wilcox_test <- function(x, ...) {
 #'
 #'
 #' @param fit The output from a Bayesian First Aid model.
-#'
 #' @export
+
+# Note: function not recognized as S3, needs to be called by
+# model.code.bayes_wilcox_test()
 model.code.bayes_wilcox_test <- function(fit) {
   cat("### Model code for the Bayesian First Aid alternative to the binomial",
       "test ###\n\n")
@@ -269,24 +272,26 @@ wilcox_model_code <- inject_model_string(wilcox_model_code,
 #adapted from diagnostics.bayes_two_sample_t_test
 #' Plots and prints diagnostics regarding the convergence of the model.
 #'
-#' @param fit The output from a Bayesian First Aid model.
-#'
+#' @param x The output from a Bayesian First Aid model.
 #' @export
-diagnostics.bayes_wilcox_test <- function(fit) {
-  print_mcmc_info(fit$mcmc_samples)
+# Note: function not recognized as S3, needs to be called by
+# model.code.bayes_wilcox_test()
+
+diagnostics.bayes_wilcox_test <- function(x) {
+  print_mcmc_info(x$mcmc_samples)
   cat("\n")
-  print_diagnostics_measures(round(fit$stats, 3))
+  print_diagnostics_measures(round(x$stats, 3))
   cat("\n")
   cat("  Model parameters and generated quantities\n")
-  cat("mu: the difference in means of ", fit$x_name, "and",
-      fit$y_name, "\n")
-  cat("sigma: the difference in scale of", fit$x_name, "and",
-      fit$y_name, "\n")
+  cat("mu: the difference in means of ", x$x_name, "and",
+      x$y_name, "\n")
+  cat("sigma: the difference in scale of", x$x_name, "and",
+      x$y_name, "\n")
 
   cat("\n")
 
   old_par <- par( mar = c(3.5,2.5,2.5,0.5) , mgp = c(2.25,0.7,0) )
-  plot(fit$mcmc_samples)
+  plot(x$mcmc_samples)
   par(old_par)
   invisible(NULL)
 }
