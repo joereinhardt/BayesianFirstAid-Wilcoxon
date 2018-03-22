@@ -12,7 +12,7 @@
 
 <meta name="author" content="Joachim Reinhardt" />
 
-<meta name="date" content="2018-03-21" />
+<meta name="date" content="2018-03-22" />
 
 <title>A Bayesian Alternative to the Wilcoxon Rank Test</title>
 
@@ -70,14 +70,20 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">A Bayesian Alternative to the Wilcoxon Rank Test</h1>
 <h4 class="author"><em>Joachim Reinhardt</em></h4>
-<h4 class="date"><em>2018-03-21</em></h4>
+<h4 class="date"><em>2018-03-22</em></h4>
 
 
 
-<p>The wilcox_test R-package implements a Bayesian Alternative to the Wilcoxon Signed Rank test and is intended as an addition to the BayesianFirstAid package <span class="citation">(Bååth 2014)</span>. Use as example for structure, etc: <span class="citation">(Lee 2013)</span>.</p>
-<div id="vignette-info" class="section level2">
-<h2>Vignette Info</h2>
+<p>The <strong>wilcox_test</strong> R-package implements a Bayesian Alternative to the Wilcoxon Signed Rank test and is intended as an addition to the <strong>BayesianFirstAid</strong> package <span class="citation">(Bååth 2014)</span>. The approach follows <span class="citation">(Gelman et al. 2014, 97)</span>, who suggest a three-step methodology for a Bayesian approach to the Wilcoxon test. Following this methodology, the <strong>wilcox.test</strong> function first transforms the combined input data to their ranks as in the conventional Wilcoxon procedure. Then, these ranks are normalized into z-scores, and the difference between the two groups is modeled as a normal distribution with uninformative priors. This approach has the following advantages: …</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
 <p>Note the various macros within the <code>vignette</code> section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the <code>title</code> field and the <code>\VignetteIndexEntry</code> to match the title of your vignette.</p>
+</div>
+<div id="a-bayesian-alternative-to-the-wilcoxon" class="section level2">
+<h2>A Bayesian Alternative to the Wilcoxon</h2>
+<div id="the-frequentist-wilcoxon-test" class="section level3">
+<h3>The frequentist Wilcoxon Test</h3>
+</div>
 </div>
 <div id="styles" class="section level2">
 <h2>Styles</h2>
@@ -272,8 +278,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="ref-baath2014bayesian">
 <p>Bååth, Rasmus. 2014. “Bayesian First Aid: A Package That Implements Bayesian Alternatives to the Classical *.Test Functions in R.” In <em>UseR! 2014 - the International R User Conference</em>.</p>
 </div>
-<div id="ref-lee2013carbayes">
-<p>Lee, Duncan. 2013. “CARBayes: An R Package for Bayesian Spatial Modeling with Conditional Autoregressive Priors.” <em>Journal of Statistical Software</em> 55 (13). American Statistical Association: 1–24.</p>
+<div id="ref-gelman2014bayesian">
+<p>Gelman, Andrew, John B Carlin, Hal S Stern, David B Dunson, Aki Vehtari, and Donald B Rubin. 2014. <em>Bayesian Data Analysis</em>. 3rd ed. CRC press Boca Raton, FL.</p>
 </div>
 </div>
 </div>
