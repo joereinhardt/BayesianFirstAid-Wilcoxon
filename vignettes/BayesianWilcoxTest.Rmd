@@ -20,6 +20,8 @@ procedure. Then, these ranks are normalized into z-scores, and the difference
 between the two groups is modeled as a normal distribution with uninformative 
 priors. This approach has the following advantages: ... 
 
+Note: Consider Mann-Whitney Test!
+
 ## Introduction
 
 Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
