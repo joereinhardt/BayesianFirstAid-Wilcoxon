@@ -20,7 +20,14 @@ procedure. Then, these ranks are normalized into z-scores, and the difference
 between the two groups is modeled as a normal distribution with uninformative 
 priors. This approach has the following advantages: ... 
 
-Note: Consider Mann-Whitney Test!
+Note: Consider Mann-Whitney Test! -> test for two independent groups, also
+included in wilcox.test function
+
+Gelman (blog post): "the Wilcoxon test has a huge assumption which is that the 
+distributions are identical in the two groups. This is a much more important 
+assumption than normality."
+
+
 
 ## Introduction
 

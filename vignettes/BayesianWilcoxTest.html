@@ -12,7 +12,7 @@
 
 <meta name="author" content="Joachim Reinhardt" />
 
-<meta name="date" content="2018-03-22" />
+<meta name="date" content="2018-03-30" />
 
 <title>A Bayesian Alternative to the Wilcoxon Rank Test</title>
 
@@ -70,11 +70,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">A Bayesian Alternative to the Wilcoxon Rank Test</h1>
 <h4 class="author"><em>Joachim Reinhardt</em></h4>
-<h4 class="date"><em>2018-03-22</em></h4>
+<h4 class="date"><em>2018-03-30</em></h4>
 
 
 
 <p>The <strong>wilcox_test</strong> R-package implements a Bayesian Alternative to the Wilcoxon Signed Rank test and is intended as an addition to the <strong>BayesianFirstAid</strong> package <span class="citation">(Bååth 2014)</span>. The approach follows <span class="citation">(Gelman et al. 2014, 97)</span>, who suggest a three-step methodology for a Bayesian approach to the Wilcoxon test. Following this methodology, the <strong>wilcox.test</strong> function first transforms the combined input data to their ranks as in the conventional Wilcoxon procedure. Then, these ranks are normalized into z-scores, and the difference between the two groups is modeled as a normal distribution with uninformative priors. This approach has the following advantages: …</p>
+<p>Note: Consider Mann-Whitney Test!</p>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>Note the various macros within the <code>vignette</code> section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the <code>title</code> field and the <code>\VignetteIndexEntry</code> to match the title of your vignette.</p>
@@ -85,12 +86,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h3>The frequentist Wilcoxon Test</h3>
 </div>
 </div>
-<div id="styles" class="section level2">
-<h2>Styles</h2>
-<p>The <code>html_vignette</code> template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:</p>
-<pre><code>output: 
-  rmarkdown::html_vignette:
-    css: mystyles.css</code></pre>
+<div id="literature-overview" class="section level2">
+<h2>Literature Overview</h2>
 </div>
 <div id="figures" class="section level2">
 <h2>Figures</h2>
