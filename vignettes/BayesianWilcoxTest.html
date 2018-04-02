@@ -12,7 +12,7 @@
 
 <meta name="author" content="Joachim Reinhardt" />
 
-<meta name="date" content="2018-03-30" />
+<meta name="date" content="2018-04-02" />
 
 <title>A Bayesian Alternative to the Wilcoxon Rank Test</title>
 
@@ -70,12 +70,27 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">A Bayesian Alternative to the Wilcoxon Rank Test</h1>
 <h4 class="author"><em>Joachim Reinhardt</em></h4>
-<h4 class="date"><em>2018-03-30</em></h4>
+<h4 class="date"><em>2018-04-02</em></h4>
 
 
 
 <p>The <strong>wilcox_test</strong> R-package implements a Bayesian Alternative to the Wilcoxon Signed Rank test and is intended as an addition to the <strong>BayesianFirstAid</strong> package <span class="citation">(Bååth 2014)</span>. The approach follows <span class="citation">(Gelman et al. 2014, 97)</span>, who suggest a three-step methodology for a Bayesian approach to the Wilcoxon test. Following this methodology, the <strong>wilcox.test</strong> function first transforms the combined input data to their ranks as in the conventional Wilcoxon procedure. Then, these ranks are normalized into z-scores, and the difference between the two groups is modeled as a normal distribution with uninformative priors. This approach has the following advantages: …</p>
-<p>Note: Consider Mann-Whitney Test!</p>
+<p>Note: Consider Mann-Whitney Test! -&gt; test for two independent groups, also included in wilcox.test function</p>
+<p>Gelman (blog post): “the Wilcoxon test has a huge assumption which is that the distributions are identical in the two groups. This is a much more important assumption than normality.”</p>
+<p>“History of the idea”: <span class="citation">(Van der Waerden 1953)</span> introduced concept, but used equidistant points instead of quantiles. <span class="citation">(Gelman et al. 2014, 97)</span> using quantiles</p>
+<p><span class="citation">(Kruschke 2013, 575)</span>: “In the case of data from a single group, including the case of a single group of difference scores from repeated measures on the same subjects, a modified model merely estimates <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\sigma\)</span>, and <span class="math inline">\(\nu\)</span> of the group.” Crucial change from independent two paired sample test: two different <span class="math inline">\(\sigma\)</span>s vs. a single one See Kruschke’s 2011 discussion of oneway / twoway ANOVA!</p>
+<p>Consider including effect size</p>
+<div id="prior-distributions" class="section level2">
+<h2>Prior Distributions</h2>
+<p>(Two-sample case first)</p>
+<p>One-sample case: Assuming <span class="math inline">\(\mu_{diff}\)</span> to come from <span class="math inline">\(N(\mu, 1)\)</span> distribution. Thus, a prior is needed only for <span class="math inline">\(\mu\)</span>. Maximum and Minimum value of <span class="math inline">\(\mu_{diff}\)</span>: Occur when all values from sample <span class="math inline">\(x\)</span> are larger than the values from sample <span class="math inline">\(y\)</span>. Figure out Min. / Max. by Simulation:</p>
+<p>Generate <span class="math inline">\(n\)</span> nonequal values for <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>, where <span class="math inline">\(x_i &gt; y_i\)</span> for all <span class="math inline">\(i\)</span>. Perform rank-z-score transform and calculate the mean z-score for <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>:<br />
+<span class="math inline">\(\bar{z}_x = \frac{1}{n} \sum^n_{i=1} z_{x_i}\)</span>, equivalently for <span class="math inline">\(y\)</span>. For large <span class="math inline">\(n\)</span>, <span class="math inline">\(\bar{z}_x-\bar{z}_y \to 1.5958\)</span>. Exchanging <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> leads to <span class="math inline">\(\bar{z}_y - \bar{z}_x \to -1.5958\)</span>. Employing a uniformly distributed prior, the prior for <span class="math inline">\(\mu_{diff}\)</span> is <span class="math inline">\(Unif(-1.5958, 1.5958)\)</span>. (Check if there is a more flexible <span class="math inline">\(Beta\)</span>-representation)</p>
+<p>For two sample case:<br />
+<span class="math inline">\(\mu_x\)</span> and <span class="math inline">\(\mu_y\)</span> come from separate <span class="math inline">\(N(\mu, \sigma)\)</span> distributions – priors are needed for both <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span>. From simulation, large <span class="math inline">\(n\)</span>: <span class="math inline">\(\bar{z}_x \to 0.7979\)</span>, <span class="math inline">\(\bar{z}_y \to -0.7979\)</span>. Thus, priors for <span class="math inline">\(\mu_x\)</span> and <span class="math inline">\(\mu_y\)</span> are set to <span class="math inline">\(Unif(-0.7979, 0.7979)\)</span>.<br />
+For priors on <span class="math inline">\(\sigma\)</span>, the simulation should also give the lower limit for possible values of <span class="math inline">\(\sigma\)</span> (is this true?). Results give<br />
+<span class="math inline">\(\sigma_{x_L} = \sigma_{y_L} \to 0.6028\)</span>. The upper limit is given by <span class="math inline">\(\sigma_H = 1\)</span>, if <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> are “maximally distributed” within the <span class="math inline">\(N(0,1)\)</span> parent distribution. Priors for <span class="math inline">\(\sigma\)</span> thus set to <span class="math inline">\(Unif(0.6027, 1)\)</span>.</p>
+</div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>Note the various macros within the <code>vignette</code> section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the <code>title</code> field and the <code>\VignetteIndexEntry</code> to match the title of your vignette.</p>
@@ -277,6 +292,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </div>
 <div id="ref-gelman2014bayesian">
 <p>Gelman, Andrew, John B Carlin, Hal S Stern, David B Dunson, Aki Vehtari, and Donald B Rubin. 2014. <em>Bayesian Data Analysis</em>. 3rd ed. CRC press Boca Raton, FL.</p>
+</div>
+<div id="ref-kruschke2013bayesian">
+<p>Kruschke, John K. 2013. “Bayesian Estimation Supersedes the T Test.” <em>Journal of Experimental Psychology: General</em> 142 (2). American Psychological Association: 573.</p>
+</div>
+<div id="ref-van1953neuer">
+<p>Van der Waerden, BL. 1953. “Ein Neuer Test Für Das Problem Der Zwei Stichproben.” <em>Mathematische Annalen</em> 126 (1). Springer: 93–107.</p>
 </div>
 </div>
 </div>
