@@ -2,13 +2,19 @@
 % Please edit documentation in R/wilcox_test.R
 \name{bayes.wilcox.test}
 \alias{bayes.wilcox.test}
+\alias{bayes.wilcox.test.default}
 \title{Bayesian First Aid Alternative to the t-test}
 \usage{
-bayes.wilcox.test(x, y, cred.mass = 0.95, mu = 0, n.iter = 30000,
-  alternative = NULL, conf.level)
+bayes.wilcox.test(x, ...)
+
+\method{bayes.wilcox.test}{default}(x, y, cred.mass = 0.95, mu = 0,
+  paired = FALSE, n.iter = 30000, alternative = NULL, conf.level,
+  progress.bar = "text", ...)
 }
 \arguments{
 \item{x}{numeric vector of data values}
+
+\item{...}{further arguments to be passed to or from methods.}
 
 \item{y}{numeric vector of data values to be compared to x}
 
@@ -19,6 +25,8 @@ conf.level in \code{\link{wilcox.test}}}
 \item{mu}{a number specifying an optional parameter used to form the null
 hypothesis.}
 
+\item{paired}{a logical indicating whether you want a paired test.}
+
 \item{n.iter}{The number of iterations to run the MCMC sampling.}
 
 \item{alternative}{ignored, only retained in order to maintain compability
@@ -27,6 +35,9 @@ with \code{\link{wilcox.test}}}
 \item{conf.level}{identical to cred.mass,
 ignored, only retained in order to maintain compability with
 \code{\link{wilcox.test}}}
+
+\item{progress.bar}{The type of progress bar. Possible values are "text",
+"gui", and "none".}
 }
 \value{
 A list of class \code{bayes_wilcox_test}. It can be further inspected
