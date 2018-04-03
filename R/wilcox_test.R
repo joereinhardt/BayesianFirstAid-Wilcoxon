@@ -40,7 +40,7 @@
 #' @export
 #' @rdname bayes.wilcox.test
 bayes.wilcox.test <- function(x, ...){
-  UseMethod("bayes.t.test")
+  UseMethod("bayes.wilcox.test")
 }
 
 #Note: needs to take same input as wilcox.test()
@@ -66,7 +66,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
 
   ### Original (but slighly modified) code from t.test.default ###
 
-  if (!missing(mu) && (length(mu) != 1 || is.na(mu)))
+ if (!missing(mu) && (length(mu) != 1 || is.na(mu)))
     stop("'mu' must be a single number")
   if (!missing(cred.mass) && (length(cred.mass) != 1 || !is.finite(cred.mass) ||
                               cred.mass < 0 || cred.mass > 1))
@@ -101,6 +101,8 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                           progress.bar = progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass,
                       comp_val = mu)
+  #need to be assigned per hand for only one variable
+  rownames(stats) <- "mu_diff"
   bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu,
                      cred_mass = cred.mass, x_name = x_name, y_name = y_name,
                      data_name = data_name, x_data_expr = x_name,
@@ -117,25 +119,20 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
 #JAGS model string
 paired_samples_wilcox_model_string <- "model {
   for (i in 1:length(pair_diff)) {
-    pair_diff[i] ~ dnorm(mu_diff, 1)
+    pair_diff[i] ~ dnorm( mu_diff, 1 )
   }
-
-  mu_diff ~ dunif(-1.6, 1.6)
+  mu_diff ~ dunif( -1.6, 1.6 )
 }"
 
 #Figure out how to include comp.mu!
 
 #Function for JAGS model
-jags_paired_wilcox_test <- function(x, y, comp.mu = 0, n.adapt = 500,
+jags_paired_wilcox_test <- function(x, y, comp_mu = 0, n.adapt = 500,
                                     n.chains = 3, n.update = 100,
                                     n.iter = 5000, thin = 1,
                                     progress.bar = "text") {
   pair_diff <- x - y
-  data_list <- list(
-    pair_diff = pair_diff,
-    comp.mu = comp.mu
-  )
-
+  data_list <- list(pair_diff = pair_diff)
   inits_list <- list(mu_diff = mean(pair_diff, trim = 0.2))
   params <- c("mu_diff")
   mcmc_samples <- run_jags(paired_samples_wilcox_model_string,
@@ -152,8 +149,9 @@ jags_paired_wilcox_test <- function(x, y, comp.mu = 0, n.adapt = 500,
 
 }
 
+############################################
 ### Paired Sample Wilcox Test S3 Methods ###
-
+############################################
 
 #' @export
 print.bayes_paired_wilcox_test <- function(x, ...) {
@@ -162,17 +160,19 @@ print.bayes_paired_wilcox_test <- function(x, ...) {
   cat("\n")
   cat("\tBayesian First Aid Wilcoxon test\n")
   cat("\n")
+
   cat("data: ", x$x_name, " (n = ", length(x$x) ,") and ",
       x$y_name, " (n = ", length(x$y) ,")\n", sep = "")
   cat("\n")
+
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep = "")
-  cat("difference of the means: ", s["mu_diff", "median"],
-      " [", s["mu_diff", "HDIlo"],
-      ", ", s["mu_diff", "HDIup"] , "]\n",sep = "")
+  cat("mean paired difference: ", s["mu_diff", "median"],
+      " [", s["mu_diff", "HDIlo"], ", ",
+      s["mu_diff", "HDIup"] , "]\n", sep = "")
   cat("\n")
-  cat("The difference of the means is greater than", s["mu_diff","comp"] ,
-      "by a probability of", s["mu_diff","%>comp"], "\n")
-  cat("and less than", s["mu_diff", "comp"] ,
+  cat("The mean difference is more than",
+      s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
+  cat("and less than", s["mu_diff", "comp"],
       "by a probability of", s["mu_diff", "%<comp"], "\n")
   cat("\n")
   invisible(NULL)
@@ -195,7 +195,7 @@ summary.bayes_paired_wilcox_test <- function(object, ...) {
   cat("\n")
 
   cat("  Measures\n" )
-  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%<comp", "%>comp")])
+  print(s[, c("mean", "HDIlo", "HDIup", "%<comp", "%>comp")])
   cat("\n")
   cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,
       "% HDI credible interval.\n", sep = "")
@@ -218,10 +218,10 @@ plot.bayes_paired_wilcox_test <- function(x, ...) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)
-  mu = samples_mat[,"mu"]
+  mu = 0
   sample_mat <- as.matrix(x$mcmc_samples)
   xlim = range(c(mu, x$comp))
-  plotPost(sample_mat[, "mu_diff"], cred_mass = x$cred_mass,
+  plotPost(sample_mat[,"var1"], cred_mass = x$cred_mass,
            comp_val = x$comp, xlim = xlim, cex = 1, cex.lab = 1.5,
            main = "Difference in means",
            xlab = expression(mu_diff), show_median = TRUE)
@@ -256,33 +256,20 @@ model.code.bayes_paired_wilcox_test <- function(fit) {
 }
 
 # Not to be run, just to be printed - adapted from two_sample_t_test_model_code
-paired_samples_wilcox_model_code <- function(x, y) {
-  d <- NULL
+paired_samples_wilcox_model_code <- function(pair_diff) {
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
-
-  # Setting parameters for the priors that in practice will result
-  # in flat priors on the mu's and sigma's.
-  mean_mu = mean( c(x, y), trim = 0.2)
-  precision_mu = 1 / (mad( c(x, y) )^2 * 1000000)
-  sigma_low = mad( c(x, y) ) / 1000
-  sigma_high = mad( c(x, y) ) * 1000
 
   # Initializing parameters to sensible starting values helps the convergence
   # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
   # and standard deviation (MAD).
-  inits_list <- list(mu = mean(d, trim = 0.2), sigma = mad0(d))
+  inits_list <- list(mu_diff = mean(pair_diff, trim = 0.2))
 
   data_list <- list(
-    d = d,
-    mean_mu = mean(d, trim = 0.2),
-    precision_mu = 1 / (mad(d)^2 * 1000000),
-    sigma_low = mad(d) / 1000,
-    sigma_high = mad(d) * 1000
-  )
+    pair_diff = pair_diff)
 
   # The parameters to monitor.
-  params <- c("mu", "sigma")
+  params <- c("mu_diff")
 
   # Running the model
   model <- jags.model(textConnection(model_string), data = data_list,
@@ -327,4 +314,4 @@ diagnostics.bayes_paired_wilcox_test <- function(x) {
   invisible(NULL)
 }
 
-### End wilcox.test S3 functions ###
+### End of Paired Sample Wilcox Test S3 Functions ###
