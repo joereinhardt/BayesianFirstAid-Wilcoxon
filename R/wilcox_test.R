@@ -363,12 +363,7 @@ diagnostics.bayes_paired_wilcox_test <- function(x) {
 
   cat("\n")
 
-  old_par <- par(no.readonly = TRUE)
-  layout(matrix(c(1, 2) , nrow = 2, byrow = FALSE))
-  par(mar = c(3.5,3.5,2.5,0.51), mgp = c(2.25,0.7,0))
-  #old_par <- par(mar = c(3.5,2.5,2.5,0.5) , mgp = c(2.25,0.7,0))
-  #layout(matrix(c(2, 1,
-  #                2, 1), nrow = 2, byrow = FALSE))
+  old_par <- par(mar = c(3.5,2.5,2.5,0.5) , mgp = c(2.25,0.7,0))
   plot(x$mcmc_samples)
   par(old_par)
   invisible(NULL)
