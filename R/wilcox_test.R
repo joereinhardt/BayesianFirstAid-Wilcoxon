@@ -111,20 +111,31 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   class(bfa_object) <- c("bayes_paired_wilcox_test", "bayesian_first_aid")
 
   } else {
-  NULL
+  mcmc_samples <- jags_two_sample_wilcox_test(x, y, n.chains = 3,
+                                         n.iter = ceiling(n.iter / 3),
+                                         progress.bar = progress.bar)
+  stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
+  bfa_object <- list(x = x, y = y, comp = mu, cred_mass = cred.mass,
+                     x_name = x_name, y_name = y_name, data_name = data_name,
+                     x_data_expr = x_name, y_data_expr = y_name,
+                     mcmc_samples = mcmc_samples, stats = stats)
+  class(bfa_object) <- c("bayes_two_sample_wilcox_test", "bayesian_first_aid")
+
   }
   bfa_object
 }
 
+#Paired-Sample model
+####################
 #JAGS model string
 paired_samples_wilcox_model_string <- "model {
-  for (i in 1:length(pair_diff)) {
-    pair_diff[i] ~ dnorm( mu_diff, 1 )
-  }
-  mu_diff ~ dunif( -1.6, 1.6 )
+for (i in 1:length(pair_diff)) {
+  pair_diff[i] ~ dnorm( mu_diff, 1 )
+}
+mu_diff ~ dunif( -1.6, 1.6 )
 }"
 
-#Figure out how to include comp.mu!
+#Figure out how/whether to include comp.mu!
 
 #Function for JAGS model
 jags_paired_wilcox_test <- function(x, y, comp_mu = 0, n.adapt = 500,
@@ -133,7 +144,7 @@ jags_paired_wilcox_test <- function(x, y, comp_mu = 0, n.adapt = 500,
                                     progress.bar = "text") {
   pair_diff <- x - y
   data_list <- list(pair_diff = pair_diff)
-  inits_list <- list(mu_diff = mean(pair_diff, trim = 0.2))
+  inits_list <- list(mu_diff = 0)
   params <- c("mu_diff")
   mcmc_samples <- run_jags(paired_samples_wilcox_model_string,
                            data = data_list,
@@ -148,6 +159,50 @@ jags_paired_wilcox_test <- function(x, y, comp_mu = 0, n.adapt = 500,
   mcmc_samples
 
 }
+
+#Two-sample model
+#################
+two_sample_wilcox_model_string <- "model {
+for(i in 1:length(x)) {
+  x[i] ~ dnorm( mu_x , sigma_x )
+}
+for(i in 1:length(y)) {
+  y[i] ~ dnorm( mu_y , sigma_y )
+}
+mu_diff <- mu_x - mu_y
+
+# The priors
+mu_x ~ dunif( -0.8 , 0.8 )
+sigma_x ~ dunif( 0.6 , 1 )
+mu_y ~ dunif( -0.8 , 0.8 )
+sigma_y ~ dunif( 0.6 , 1 )
+}"
+
+jags_two_sample_wilcox_test <- function(x, y,
+                                        n.adapt= 500,
+                                        n.chains=3, n.update = 100,
+                                        n.iter=5000, thin=1,
+                                        progress.bar="text") {
+  data_list <- list(x = x,
+                    y = y)
+
+  inits_list <- list(
+    mu_x = 0,
+    mu_y = 0,
+    sigma_x = 1,
+    sigma_y = 1)
+
+  params <- c("mu_x", "mu_y", "mu_diff")
+  mcmc_samples <- run_jags(two_sample_wilcox_model_string,
+                           data = data_list,
+                           inits = inits_list,
+                           params = params,
+                           n.chains = n.chains, n.adapt = n.adapt,
+                           n.update = n.update, n.iter = n.iter,
+                           thin = thin, progress.bar = progress.bar)
+  mcmc_samples
+}
+
 
 ############################################
 ### Paired Sample Wilcox Test S3 Methods ###
@@ -283,8 +338,8 @@ paired_samples_wilcox_model_code <- function(pair_diff) {
 }
 
 paired_samples_wilcox_model_code <- inject_model_string(
-                                        paired_samples_wilcox_model_code,
-                                        paired_samples_wilcox_model_string)
+  paired_samples_wilcox_model_code,
+  paired_samples_wilcox_model_string)
 
 
 #adapted from diagnostics.bayes_two_sample_t_test
@@ -315,3 +370,72 @@ diagnostics.bayes_paired_wilcox_test <- function(x) {
 }
 
 ### End of Paired Sample Wilcox Test S3 Functions ###
+
+#########################################
+### Two Sample Wilcox Test S3 Methods ###
+#########################################
+
+#' @export
+print.bayes_two_sample_wilcox_test <- function(x, ...) {
+  s <- format_stats(x$stats)
+
+  cat("\n")
+  cat("\tBayesian First Aid Wilcoxon test\n")
+  cat("\n")
+
+  cat("data: ", x$x_name, " (n = ", length(x$x) ,") and ",
+      x$y_name, " (n = ", length(x$y) ,")\n", sep = "")
+  cat("\n")
+
+  cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep = "")
+  cat("mean of ",  x$x_name, ": ", s["mu_x", "median"],
+      " [", s["mu_x", "HDIlo"], ", ", s["mu_x", "HDIup"] , "]\n",sep = "")
+  cat("mean of ",  x$y_name, ": ", s["mu_y", "median"],
+      " [", s["mu_y", "HDIlo"], ", ", s["mu_y", "HDIup"] , "]\n",sep = "")
+  cat("difference of the means: ", s["mu_diff", "median"],
+      " [", s["mu_diff", "HDIlo"], ", ", s["mu_diff", "HDIup"] , "]\n",sep = "")
+
+  cat("\n")
+  cat("The mean difference is more than",
+      s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
+  cat("and less than", s["mu_diff", "comp"],
+      "by a probability of", s["mu_diff", "%<comp"], "\n")
+  cat("\n")
+  invisible(NULL)
+}
+
+#' @method summary bayes_two_sample_wilcox_test
+#' @export
+summary.bayes_two_sample_wilcox_test <- function(object, ...) {
+  s <- round(object$stats, 3)
+
+  cat("  Data\n")
+  cat(object$x_name, ", n = ", length(object$x), "\n", sep = "")
+  cat(object$y_name, ", n = ", length(object$y), "\n", sep = "")
+  cat("\n")
+
+  #print_bayes_two_sample_t_test_params(object) #Replace by shorter:
+  cat("  Model parameters and generated quantities\n")
+  cat("mu_x: the mean of QUANTILE-RANK TRANSFORMED", object$x_name, "\n")
+  cat("mu_diff: the difference in means of ", object$x_name, "and",
+      object$y_name, "\n")
+  cat("mu_y: the mean of", object$y_name, "\n")
+  cat("\n")
+
+  cat("  Measures\n" )
+  print(s[, c("mean", "HDIlo", "HDIup", "%<comp", "%>comp")])
+  cat("\n")
+  cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,
+      "% HDI credible interval.\n", sep = "")
+  cat("'%<comp' and '%>comp' are the probabilities of the respective parameter",
+      "being\n")
+  cat("smaller or larger than ", s[1, "comp"] ,".\n", sep = "")
+
+  cat("\n")
+  cat("  Quantiles\n" )
+  print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  invisible(object$stats)
+}
+
+
+### End of Two Sample Wilcox Test S3 Functions ###
