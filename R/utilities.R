@@ -244,7 +244,7 @@ mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
   stats$Rhat <- NA
   stats$n_eff <- NA
   if(is.mcmc.list(samples)) {
-    stats$mcmc_se <- summary(samples)$statistics["Time-series SE"] ##MODIFIED!##
+    #stats$mcmc_se <- summary(samples)$statistics["Time-series SE"] ##MODIFIED!##
     stats$Rhat <- gelman.diag(samples, multivariate = FALSE)$psrf[, 1]
     stats$n_eff <- as.integer(effectiveSize(samples))
   }
