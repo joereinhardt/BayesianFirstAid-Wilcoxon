@@ -1,6 +1,6 @@
 #Utility Functions copied from Bayesian First Aid
 #(https://github.com/rasmusab/bayesian_first_aid/blob/master/R/utility_functions.R)
-###########LINE 247 MODIFIED!#########
+###########LINE 246f MODIFIED!#########
 run_jags <- function(model_string, data, inits, params, n.chains, n.adapt, n.update, n.iter, thin, progress.bar) {
   if(!interactive()) {
     progress.bar <- "none"
@@ -243,8 +243,12 @@ mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
   stats$mcmc_se <- NA
   stats$Rhat <- NA
   stats$n_eff <- NA
-  if(is.mcmc.list(samples)) {
-    #stats$mcmc_se <- summary(samples)$statistics["Time-series SE"] ##MODIFIED!##
+  if(is.mcmc.list(samples)) { ##MODIFIED!##
+    if(ncol(as.matrix(summary(samples)$statistics)) == 1) {
+      stats$mcmc_se <- summary(samples)$statistics["Time-series SE"]
+    } else {
+      stats$mcmc_se <- summary(samples)$statistics[,"Time-series SE"]
+      }
     stats$Rhat <- gelman.diag(samples, multivariate = FALSE)$psrf[, 1]
     stats$n_eff <- as.integer(effectiveSize(samples))
   }
