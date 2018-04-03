@@ -267,19 +267,19 @@ summary.bayes_paired_wilcox_test <- function(object, ...) {
 #adapted from plot.bayes_binom_test
 #' @export
 plot.bayes_paired_wilcox_test <- function(x, ...) {
-  old_par <- par( mar = c(3.5,3.5,2.5,0.5),
-                  mgp = c(2.25,0.7,0),
-                  mfcol = c(1,1))
+  old_par <- par(mar = c(3.5,3.5,2.5,0.5),
+                 mgp = c(2.25,0.7,0),
+                 mfcol = c(1,1))
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)
   mu = 0
   sample_mat <- as.matrix(x$mcmc_samples)
-  xlim = range(c(mu, x$comp))
+  xlim = range(c(sample_mat[,"var1"], x$comp))
   plotPost(sample_mat[,"var1"], cred_mass = x$cred_mass,
            comp_val = x$comp, xlim = xlim, cex = 1, cex.lab = 1.5,
            main = "Difference in means",
-           xlab = expression(mu_diff), show_median = TRUE)
+           xlab = bquote(mu[diff]), show_median = TRUE)
   par(old_par)
   invisible(NULL)
 }
@@ -298,8 +298,8 @@ plot.bayes_paired_wilcox_test <- function(x, ...) {
 # Note: function not recognized as S3, needs to be called by
 # model.code.bayes_wilcox_test()
 model.code.bayes_paired_wilcox_test <- function(fit) {
-  cat("### Model code for the Bayesian First Aid alternative to the binomial",
-      "test ###\n\n")
+  cat("### Model code for the Bayesian First Aid alternative to the Wilcox",
+      "paired sample test ###\n\n")
   cat("require(rjags)\n\n")
 
   cat("# Setting up the data\n")
@@ -363,7 +363,12 @@ diagnostics.bayes_paired_wilcox_test <- function(x) {
 
   cat("\n")
 
-  old_par <- par( mar = c(3.5,2.5,2.5,0.5) , mgp = c(2.25,0.7,0) )
+  old_par <- par(no.readonly = TRUE)
+  layout(matrix(c(1, 2) , nrow = 2, byrow = FALSE))
+  par(mar = c(3.5,3.5,2.5,0.51), mgp = c(2.25,0.7,0))
+  #old_par <- par(mar = c(3.5,2.5,2.5,0.5) , mgp = c(2.25,0.7,0))
+  #layout(matrix(c(2, 1,
+  #                2, 1), nrow = 2, byrow = FALSE))
   plot(x$mcmc_samples)
   par(old_par)
   invisible(NULL)
@@ -435,6 +440,117 @@ summary.bayes_two_sample_wilcox_test <- function(object, ...) {
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
   invisible(object$stats)
+}
+
+#' @export
+plot.bayes_two_sample_wilcox_test <- function(x, ...) {
+  stats <- x$stats
+  mcmc_samples <- x$mcmc_samples
+  samples_mat <- as.matrix(mcmc_samples)
+  mu_x = samples_mat[,"mu_x"]
+  mu_y = samples_mat[,"mu_y"]
+  mu_diff = samples_mat[,"mu_diff"]
+
+  old_par <- par(no.readonly = TRUE)
+  layout(matrix(c(3, 1,
+                  3, 2) , nrow = 2, byrow = FALSE))
+  par(mar = c(3.5,3.5,2.5,0.51) , mgp = c(2.25,0.7,0) )
+
+  # Plot posterior distribution of parameters mu_x, mu_y, and their difference:
+  xlim = range(c(mu_x , mu_y))
+  plotPost(mu_x,  xlim = xlim, cex.lab = 1.75, cred_mass = x$cred_mass,
+           show_median = TRUE, xlab = bquote(mu[x]),
+           main = paste(x$x_name,"Mean"), col = "skyblue")
+  plotPost(mu_y,  xlim = xlim, cex.lab = 1.75,  cred_mass = x$cred_mass,
+           show_median = TRUE, xlab = bquote(mu[y]),
+           main = paste(x$y_name,"Mean") , col = "skyblue")
+  plotPost(mu_diff, comp_val = x$comp, cred_mass = x$cred_mass,
+            xlab = bquote(mu[x] - mu[y]) , cex.lab = 1.75 , show_median = TRUE,
+            main = "Difference of Means" , col = "skyblue")
+
+  par(old_par)
+  invisible(NULL)
+  }
+
+#' Prints code that replicates the model you just ran.
+#'
+#' This is good if you better want to understand how the model is
+#' implemented or if you want to run a modified version of the code.
+#'
+#'
+#' @param fit The output from a Bayesian First Aid model.
+#' @export
+model.code.bayes_two_sample_wilcox_test <- function(fit) {
+  cat("### Model code for the Bayesian First Aid alternative to the Wilcox",
+      "two sample test ###\n\n")
+  cat("require(rjags)\n\n")
+
+  cat("# Setting up the data\n")
+  cat("x <-", fit$x_name, "\n")
+  cat("y <-", fit$y_name, "\n")
+  cat("\n")
+  pretty_print_function_body(two_sample_wilcox_model_code)
+  invisible(NULL)
+}
+
+# Not to be run, just to be printed - adapted from two_sample_t_test_model_code
+two_sample_wilcox_model_code <- function(x, y) {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+
+  # Initializing parameters to sensible starting values helps the convergence
+  # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
+  # and standard deviation (MAD).
+  inits_list <- list(
+    mu_x = 0,
+    mu_y = 0,
+    sigma_x = 1,
+    sigma_y = 1)
+
+  data_list <- list(x = x,
+                    y = y)
+
+  # The parameters to monitor.
+  params <- c("mu_x", "mu_y", "mu_diff")
+
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = data_list,
+                      inits = inits_list, n.chains = 3, n.adapt = 1000)
+  update(model, 500) # Burning some samples to the MCMC gods....
+  samples <- coda.samples(model, params, n.iter = 10000)
+
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)
+}
+
+two_sample_wilcox_model_code <- inject_model_string(
+  two_sample_wilcox_model_code,
+  two_sample_wilcox_model_string)
+#adapted from diagnostics.bayes_two_sample_t_test
+#' Plots and prints diagnostics regarding the convergence of the model.
+#'
+#' @param x The output from a Bayesian First Aid model.
+#' @export
+# Note: function not recognized as S3, needs to be called by
+# model.code.bayes_wilcox_test()
+
+diagnostics.bayes_two_sample_wilcox_test <- function(x) {
+  print_mcmc_info(x$mcmc_samples)
+  cat("\n")
+  print_diagnostics_measures(round(x$stats, 3))
+  cat("\n")
+  cat("  Model parameters and generated quantities\n")
+  cat("mu_x: the mean of QUANTILE-RANK TRANSFORMED", x$x_name, "\n")
+  cat("mu_diff: the difference in means of ", x$x_name, "and",
+      x$y_name, "\n")
+  cat("mu_y: the mean of", x$y_name, "\n")
+  cat("\n")
+
+  old_par <- par( mar = c(3.5,2.5,2.5,0.5) , mgp = c(2.25,0.7,0) )
+  plot(x$mcmc_samples)
+  par(old_par)
+  invisible(NULL)
 }
 
 
