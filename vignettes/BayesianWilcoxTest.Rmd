@@ -37,7 +37,7 @@ merely estimates $\mu$, $\sigma$, and $\nu$ of the group." Crucial change from
 independent two paired sample test: two different $\sigma$s vs. a single one
 See Kruschke's 2011 discussion of oneway / twoway ANOVA!
 
-Consider including effect size
+Consider including effect size / How to deal with mu?
 
 
 ## Prior Distributions
@@ -67,6 +67,8 @@ possible values of $\sigma$ (is this true?). Results give
 $\sigma_{x_L} = \sigma_{y_L} \to 0.6028$. The upper limit is given by 
 $\sigma_H = 1$, if $x$ and $y$ are "maximally distributed" within the $N(0,1)$
 parent distribution. Priors for $\sigma$ thus set to $Unif(0.6027, 1)$.  
+
+
 
 ## Introduction
 
