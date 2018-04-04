@@ -7,7 +7,7 @@
 \usage{
 bayes.wilcox.test(x, ...)
 
-\method{bayes.wilcox.test}{default}(x, y, cred.mass = 0.95, mu = 0,
+\method{bayes.wilcox.test}{default}(x, y, cred.mass = 0.95, mu = NULL,
   paired = FALSE, n.iter = 30000, alternative = NULL, conf.level,
   progress.bar = "text", ...)
 }
@@ -22,8 +22,9 @@ bayes.wilcox.test(x, ...)
 reported credible intervals. This argument fills a similar role as
 conf.level in \code{\link{wilcox.test}}}
 
-\item{mu}{a number specifying an optional parameter used to form the null
-hypothesis.}
+\item{mu}{ignored, only retained in order to maintain compability
+with \code{\link{wilcox.test}}. Since \code{bayes.wilcox.test} transforms
+data to normalized ranks, this parameter has no meaningful interpretation}
 
 \item{paired}{a logical indicating whether you want a paired test.}
 
