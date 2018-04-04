@@ -8,8 +8,8 @@
 bayes.wilcox.test(x, ...)
 
 \method{bayes.wilcox.test}{default}(x, y, cred.mass = 0.95, mu = NULL,
-  paired = FALSE, n.iter = 30000, alternative = NULL, conf.level,
-  progress.bar = "text", ...)
+  paired = FALSE, n.iter = 30000, alternative = NULL, exact = NULL,
+  correct = NULL, conf.int = NULL, conf.level, progress.bar = "text", ...)
 }
 \arguments{
 \item{x}{numeric vector of data values}
@@ -31,6 +31,15 @@ data to normalized ranks, this parameter has no meaningful interpretation}
 \item{n.iter}{The number of iterations to run the MCMC sampling.}
 
 \item{alternative}{ignored, only retained in order to maintain compability
+with \code{\link{wilcox.test}}}
+
+\item{exact}{ignored, only retained in order to maintain compability
+with \code{\link{wilcox.test}}}
+
+\item{correct}{ignored, only retained in order to maintain compability
+with \code{\link{wilcox.test}}}
+
+\item{conf.int}{ignored, only retained in order to maintain compability
 with \code{\link{wilcox.test}}}
 
 \item{conf.level}{identical to cred.mass,

@@ -20,6 +20,12 @@
 #' @param n.iter The number of iterations to run the MCMC sampling.
 #' @param alternative ignored, only retained in order to maintain compability
 #'     with \code{\link{wilcox.test}}
+#' @param exact ignored, only retained in order to maintain compability
+#'     with \code{\link{wilcox.test}}
+#' @param correct ignored, only retained in order to maintain compability
+#'     with \code{\link{wilcox.test}}
+#' @param conf.int ignored, only retained in order to maintain compability
+#'     with \code{\link{wilcox.test}}
 #' @param conf.level identical to cred.mass,
 #'     ignored, only retained in order to maintain compability with
 #'     \code{\link{wilcox.test}}
@@ -52,6 +58,9 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                       paired = FALSE,
                                       n.iter = 30000,
                                       alternative = NULL,
+                                      exact = NULL,
+                                      correct = NULL,
+                                      conf.int = NULL,
                                       conf.level,
                                       progress.bar = "text", ...) {
   ### Original (but slighly modified) code from t.test.default ###
@@ -68,6 +77,23 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   if (!missing(mu)) {
     warning("The argument 'mu' is ignored by bayes.wilcox.test")
   }
+
+  if (!missing(exact)) {
+    warning("The argument 'exact' is ignored by bayes.wilcox.test")
+  }
+
+  if (!missing(correct)) {
+    warning("The argument 'correct' is ignored by bayes.wilcox.test")
+  }
+
+  if (!missing(conf.int)) {
+    warning("The argument 'conf.int' is ignored by bayes.wilcox.test")
+  }
+
+  if (missing(y)) {
+    stop("'y' is required for bayes.wilcox.test")
+  }
+
 
   ### Original (but slighly modified) code from t.test.default ###
 
