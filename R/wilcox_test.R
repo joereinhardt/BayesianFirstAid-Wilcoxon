@@ -13,8 +13,9 @@
 #' @param cred.mass he amount of probability mass that will be contained in
 #'      reported credible intervals. This argument fills a similar role as
 #'      conf.level in \code{\link{wilcox.test}}
-#' @param mu a number specifying an optional parameter used to form the null
-#'     hypothesis.
+#' @param mu ignored, only retained in order to maintain compability
+#'     with \code{\link{wilcox.test}}. Since \code{bayes.wilcox.test} transforms
+#'     data to normalized ranks, this parameter has no meaningful interpretation
 #' @param paired a logical indicating whether you want a paired test.
 #' @param n.iter The number of iterations to run the MCMC sampling.
 #' @param alternative ignored, only retained in order to maintain compability
@@ -47,7 +48,7 @@ bayes.wilcox.test <- function(x, ...){
 #' @export
 #' @rdname bayes.wilcox.test
 bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
-                                      mu = 0,
+                                      mu = NULL,
                                       paired = FALSE,
                                       n.iter = 30000,
                                       alternative = NULL,
@@ -61,7 +62,11 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   }
 
   if (!missing(alternative)) {
-    warning("The argument 'alternative' is ignored by bayes.binom.test")
+    warning("The argument 'alternative' is ignored by bayes.wilcox.test")
+  }
+
+  if (!missing(mu)) {
+    warning("The argument 'mu' is ignored by bayes.wilcox.test")
   }
 
   ### Original (but slighly modified) code from t.test.default ###
@@ -93,7 +98,9 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
     stop("not enough 'y' observations")
 
   ### Running Model. Code adapted from BFA
-
+  #set mu to zero
+  mu <- 0
+  #Run model
   if (paired) {
   mcmc_samples <- jags_paired_wilcox_test(x, y,
                                           n.chains = 3,
@@ -101,7 +108,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                           progress.bar = progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass,
                       comp_val = mu)
-  #need to be assigned per hand for only one variable
+  #quick fix to get around utility function not assigning names if only one var
   rownames(stats) <- "mu_diff"
   bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu,
                      cred_mass = cred.mass, x_name = x_name, y_name = y_name,
@@ -138,8 +145,8 @@ mu_diff ~ dunif( -1.6, 1.6 )
 #Figure out how/whether to include comp.mu!
 
 #Function for JAGS model
-jags_paired_wilcox_test <- function(x, y, comp_mu = 0, n.adapt = 500,
-                                    n.chains = 3, n.update = 100,
+jags_paired_wilcox_test <- function(x, y, comp_mu = 0, n.adapt = 1000,
+                                    n.chains = 3, n.update = 500,
                                     n.iter = 5000, thin = 1,
                                     progress.bar = "text") {
   pair_diff <- x - y
@@ -179,10 +186,10 @@ sigma_y ~ dunif( 0.6 , 1 )
 }"
 
 jags_two_sample_wilcox_test <- function(x, y,
-                                        n.adapt= 500,
-                                        n.chains=3, n.update = 100,
-                                        n.iter=5000, thin=1,
-                                        progress.bar="text") {
+                                        n.adapt= 1000,
+                                        n.chains = 3, n.update = 500,
+                                        n.iter = 10000, thin = 1,
+                                        progress.bar = "text") {
   data_list <- list(x = x,
                     y = y)
 
@@ -358,8 +365,6 @@ diagnostics.bayes_paired_wilcox_test <- function(x) {
   cat("  Model parameters and generated quantities\n")
   cat("mu_diff: the difference in means of ", x$x_name, "and",
       x$y_name, "\n")
-  cat("sigma: the difference in scale of", x$x_name, "and",
-      x$y_name, "\n")
 
   cat("\n")
 
@@ -477,7 +482,7 @@ plot.bayes_two_sample_wilcox_test <- function(x, ...) {
 #' @export
 model.code.bayes_two_sample_wilcox_test <- function(fit) {
   cat("### Model code for the Bayesian First Aid alternative to the Wilcox",
-      "two sample test ###\n\n")
+      "two-sample test ###\n\n")
   cat("require(rjags)\n\n")
 
   cat("# Setting up the data\n")
@@ -494,8 +499,8 @@ two_sample_wilcox_model_code <- function(x, y) {
   BayesianFirstAid::replace_this_with_model_string
 
   # Initializing parameters to sensible starting values helps the convergence
-  # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
-  # and standard deviation (MAD).
+  # of the MCMC sampling. Here using parameters for both samples having the
+  # same distribution
   inits_list <- list(
     mu_x = 0,
     mu_y = 0,
@@ -512,7 +517,7 @@ two_sample_wilcox_model_code <- function(x, y) {
   model <- jags.model(textConnection(model_string), data = data_list,
                       inits = inits_list, n.chains = 3, n.adapt = 1000)
   update(model, 500) # Burning some samples to the MCMC gods....
-  samples <- coda.samples(model, params, n.iter = 10000)
+  samples <- coda.samples(model, params, n.iter = 5000)
 
   # Inspecting the posterior
   plot(samples)
