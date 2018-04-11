@@ -18,7 +18,7 @@ bayes.wilcox.test(x, ...)
 
 \item{y}{numeric vector of data values to be compared to x}
 
-\item{cred.mass}{he amount of probability mass that will be contained in
+\item{cred.mass}{the amount of probability mass that will be contained in
 reported credible intervals. This argument fills a similar role as
 conf.level in \code{\link{wilcox.test}}}
 
