@@ -10,7 +10,7 @@
 #'
 #' @param x numeric vector of data values
 #' @param y numeric vector of data values to be compared to x
-#' @param cred.mass he amount of probability mass that will be contained in
+#' @param cred.mass the amount of probability mass that will be contained in
 #'      reported credible intervals. This argument fills a similar role as
 #'      conf.level in \code{\link{wilcox.test}}
 #' @param mu ignored, only retained in order to maintain compability
@@ -118,17 +118,29 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   # Checking that there is enough data
   nx <- length(x)
   ny <- length(y)
+  n <- nx + ny
   if (nx < 2)
     stop("not enough 'x' observations")
   if (ny < 2)
     stop("not enough 'y' observations")
+
+  #Transform Data
+  ranks <- rank(c(x, y))
+  ranksX <- ranks[1:nx]
+  ranksY <- ranks[-(1:ny)]
+  seqQ <- seq(1, 2*n - 1, by = 2)/(2*n)
+  qRanks <- seqQ[ranks]
+  zRanks <- qnorm(qRanks)
+  zRanksX <- zRanks[1:nx]
+  zRanksY <- zRanks[-(1:ny)]
+
 
   ### Running Model. Code adapted from BFA
   #set mu to zero
   mu <- 0
   #Run model
   if (paired) {
-  mcmc_samples <- jags_paired_wilcox_test(x, y,
+  mcmc_samples <- jags_paired_wilcox_test(zRanksX, zRanksY,
                                           n.chains = 3,
                                           n.iter = ceiling(n.iter / 3),
                                           progress.bar = progress.bar)
@@ -144,7 +156,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   class(bfa_object) <- c("bayes_paired_wilcox_test", "bayesian_first_aid")
 
   } else {
-  mcmc_samples <- jags_two_sample_wilcox_test(x, y, n.chains = 3,
+  mcmc_samples <- jags_two_sample_wilcox_test(zRanksX, zRanksY, n.chains = 3,
                                          n.iter = ceiling(n.iter / 3),
                                          progress.bar = progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
