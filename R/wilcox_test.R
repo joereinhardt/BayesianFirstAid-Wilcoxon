@@ -217,10 +217,10 @@ for(i in 1:length(y)) {
 mu_diff <- mu_x - mu_y
 
 # The priors
-mu_x ~ dunif( -0.8 , 0.8 )
-sigma_x ~ dunif( 0.6 , 1 )
-mu_y ~ dunif( -0.8 , 0.8 )
-sigma_y ~ dunif( 0.6 , 1 )
+mu_x ~ dunif(mu_low, mu_high)
+sigma_x ~ dunif(0, sigma_high)
+mu_y ~ dunif(mu_low, mu_high)
+sigma_y ~ dunif(0, sigma_high)
 }"
 
 jags_two_sample_wilcox_test <- function(x, y,
@@ -228,10 +228,14 @@ jags_two_sample_wilcox_test <- function(x, y,
                                         n.chains = 3, n.update = 500,
                                         n.iter = 10000, thin = 1,
                                         progress.bar = "text") {
+  n <- length(x) + length(y)
   data_list <- list(x = x,
-                    y = y)
+                    y = y,
+                    mu_low = qnorm(1/(2*n)),
+                    mu_high = qnorm((2*n - 1)/(2*n)),
+                    sigma_high = qnorm((2*n - 1)/(2*n))^2)
 
-  inits_list <- list(
+  inits_list <- list( #Assume parameters under equal distribution for x, y
     mu_x = 0,
     mu_y = 0,
     sigma_x = 1,
