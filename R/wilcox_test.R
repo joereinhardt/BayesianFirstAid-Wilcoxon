@@ -175,9 +175,10 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
 #JAGS model string
 paired_samples_wilcox_model_string <- "model {
 for (i in 1:length(pair_diff)) {
-  pair_diff[i] ~ dnorm( mu_diff, 1 )
+  pair_diff[i] ~ dnorm(mu_diff, sigma_diff)
 }
-mu_diff ~ dunif( -1.6, 1.6 )
+mu_diff ~ dunif(-1.6, 1.6)
+sigma_diff ~ dunif(0, 2.1)
 }"
 
 #Figure out how/whether to include comp.mu!
