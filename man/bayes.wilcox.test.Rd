@@ -63,3 +63,13 @@ print, plot, summary, model.code, and diagnostics.
 Method follows http://andrewgelman.com/2015/07/13/dont-do-the-wilcoxon/, and
 fits a normal model using JAGS after rank-transformation.
 }
+\details{
+For the two-sample wilcox test, the posterior distribution is obtained as
+follows:
+
+\figure{twoSampleWilcoxDiagram.svg}{options: height=400}
+
+Diagram for the one-sample test:
+
+\figure{oneSampleWilcoxDiagram.svg}{options: height=250}
+}

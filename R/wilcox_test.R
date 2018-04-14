@@ -8,6 +8,15 @@
 #' Method follows http://andrewgelman.com/2015/07/13/dont-do-the-wilcoxon/, and
 #' fits a normal model using JAGS after rank-transformation.
 #'
+#' For the two-sample wilcox test, the posterior distribution is obtained as
+#' follows:
+#'
+#' \figure{twoSampleWilcoxDiagram.svg}{options: height=400}
+#'
+#' Diagram for the one-sample test:
+#'
+#' \figure{oneSampleWilcoxDiagram.svg}{options: height=250}
+#'
 #' @param x numeric vector of data values
 #' @param y numeric vector of data values to be compared to x
 #' @param cred.mass the amount of probability mass that will be contained in
