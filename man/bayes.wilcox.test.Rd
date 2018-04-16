@@ -3,11 +3,11 @@
 \name{bayes.wilcox.test}
 \alias{bayes.wilcox.test}
 \alias{bayes.wilcox.test.default}
-\title{Bayesian First Aid Alternative to the t-test}
+\title{Bayesian First Aid Alternative to the Wilcoxon Rank Test}
 \usage{
 bayes.wilcox.test(x, ...)
 
-\method{bayes.wilcox.test}{default}(x, y, cred.mass = 0.95, mu = NULL,
+\method{bayes.wilcox.test}{default}(x, y = NULL, cred.mass = 0.95, mu = 0,
   paired = FALSE, n.iter = 30000, alternative = NULL, exact = NULL,
   correct = NULL, conf.int = NULL, conf.level, progress.bar = "text", ...)
 }
@@ -22,9 +22,8 @@ bayes.wilcox.test(x, ...)
 reported credible intervals. This argument fills a similar role as
 conf.level in \code{\link{wilcox.test}}}
 
-\item{mu}{ignored, only retained in order to maintain compability
-with \code{\link{wilcox.test}}. Since \code{bayes.wilcox.test} transforms
-data to normalized ranks, this parameter has no meaningful interpretation}
+\item{mu}{number specifying an optional paramter to form the null hypothesis.
+See 'Details'.}
 
 \item{paired}{a logical indicating whether you want a paired test.}
 
