@@ -1,4 +1,4 @@
-#' Bayesian First Aid Alternative to the t-test
+#' Bayesian First Aid Alternative to the Wilcoxon Rank Test
 #'
 #' Function implements a bayesian alternative to the wilcoxon.test() function.
 #' Written as an addition to the Bayesian First Aid (BFA) package by
@@ -22,9 +22,8 @@
 #' @param cred.mass the amount of probability mass that will be contained in
 #'      reported credible intervals. This argument fills a similar role as
 #'      conf.level in \code{\link{wilcox.test}}
-#' @param mu ignored, only retained in order to maintain compability
-#'     with \code{\link{wilcox.test}}. Since \code{bayes.wilcox.test} transforms
-#'     data to normalized ranks, this parameter has no meaningful interpretation
+#' @param mu number specifying an optional paramter to form the null hypothesis.
+#'      See 'Details'.
 #' @param paired a logical indicating whether you want a paired test.
 #' @param n.iter The number of iterations to run the MCMC sampling.
 #' @param alternative ignored, only retained in order to maintain compability
@@ -55,6 +54,7 @@
 #'
 #' @export
 #' @rdname bayes.wilcox.test
+
 bayes.wilcox.test <- function(x, ...){
   UseMethod("bayes.wilcox.test")
 }
@@ -63,7 +63,7 @@ bayes.wilcox.test <- function(x, ...){
 #' @export
 #' @rdname bayes.wilcox.test
 bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
-                                      mu = NULL,
+                                      mu = 0,
                                       paired = FALSE,
                                       n.iter = 30000,
                                       alternative = NULL,
@@ -83,10 +83,6 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
     warning("The argument 'alternative' is ignored by bayes.wilcox.test")
   }
 
-  if (!missing(mu)) {
-    warning("The argument 'mu' is ignored by bayes.wilcox.test")
-  }
-
   if (!missing(exact)) {
     warning("The argument 'exact' is ignored by bayes.wilcox.test")
   }
@@ -99,18 +95,18 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
     warning("The argument 'conf.int' is ignored by bayes.wilcox.test")
   }
 
-  if (missing(y)) {
-    stop("'y' is required for bayes.wilcox.test")
-  }
-
 
   ### Original (but slighly modified) code from t.test.default ###
 
- if (!missing(mu) && (length(mu) != 1 || is.na(mu)))
-    stop("'mu' must be a single number")
+  if (!missing(mu) && (length(mu) != 1 || is.na(mu)))
+      stop("'mu' must be a single number")
   if (!missing(cred.mass) && (length(cred.mass) != 1 || !is.finite(cred.mass) ||
-                              cred.mass < 0 || cred.mass > 1))
-    stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
+                                cred.mass < 0 || cred.mass > 1))
+      stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
+
+   if (missing(y)) {
+     y <- c(rep(mu, length(x)))
+   }
 
   # removing incomplete cases and preparing the data vectors (x & y)
   x_name <- deparse(substitute(x))
@@ -145,8 +141,6 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
 
 
   ### Running Model. Code adapted from BFA
-  #set mu to zero
-  mu <- 0
   #Run model
   if (paired) {
   mcmc_samples <- jags_paired_wilcox_test(zRanksX, zRanksY,
@@ -163,6 +157,23 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                      y_data_expr = y_name, mcmc_samples = mcmc_samples,
                      stats = stats)
   class(bfa_object) <- c("bayes_paired_wilcox_test", "bayesian_first_aid")
+
+  } else if (is.null(y)) {
+    mcmc_samples <- jags_paired_wilcox_test(zRanksX, zRanksY,
+                                            n.chains = 3,
+                                            n.iter = ceiling(n.iter / 3),
+                                            progress.bar = progress.bar)
+    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass,
+                        comp_val = mu)
+    #quick fix to get around utility function not assigning names if
+    #only one var
+    rownames(stats) <- "mu_diff"
+    bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu,
+                       cred_mass = cred.mass, x_name = x_name, y_name = y_name,
+                       data_name = data_name, x_data_expr = x_name,
+                       y_data_expr = y_name, mcmc_samples = mcmc_samples,
+                       stats = stats)
+    class(bfa_object) <- c("bayes_paired_wilcox_test", "bayesian_first_aid")
 
   } else {
   mcmc_samples <- jags_two_sample_wilcox_test(zRanksX, zRanksY, n.chains = 3,
@@ -186,7 +197,7 @@ paired_samples_wilcox_model_string <- "model {
 for (i in 1:length(pair_diff)) {
   pair_diff[i] ~ dnorm(mu_diff, sigma_diff)
 }
-mu_diff ~ dunif(-1.6, 1.6)
+mu_diff ~ dunif(-1.6, 1.6)-#
 sigma_diff ~ dunif(0, 2.1)
 }"
 
