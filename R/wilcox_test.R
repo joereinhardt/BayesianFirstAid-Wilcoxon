@@ -62,7 +62,7 @@ bayes.wilcox.test <- function(x, ...){
 #Note: needs to take same input as wilcox.test()
 #' @export
 #' @rdname bayes.wilcox.test
-bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
+bayes.wilcox.test.default <- function(x, y = NULL, cred.mass = 0.95,
                                       mu = 0,
                                       paired = FALSE,
                                       n.iter = 30000,
@@ -74,6 +74,11 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                       progress.bar = "text", ...) {
   ### Original (but slighly modified) code from t.test.default ###
 
+  if (is.null(y)) {
+    one_sample = TRUE
+    } else {
+    one_sample = FALSE
+    }
   #If statements from BFA
   if (!missing(conf.level)) {
     cred.mass <- conf.level
@@ -104,14 +109,19 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                 cred.mass < 0 || cred.mass > 1))
       stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
 
-   if (missing(y)) {
+   if (one_sample) {
      y <- c(rep(mu, length(x)))
    }
 
   # removing incomplete cases and preparing the data vectors (x & y)
   x_name <- deparse(substitute(x))
-  y_name <- deparse(substitute(y))
-  data_name <- paste(x_name, "and", y_name)
+  if (one_sample) {
+    y_name <- NULL
+    data_name <- paste(x_name)
+  } else {
+    y_name <- deparse(substitute(y))
+    data_name <- paste(x_name, "and", y_name)
+  }
   if (paired)
     xok <- yok <- complete.cases(x, y)
   else {
@@ -158,7 +168,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                      stats = stats)
   class(bfa_object) <- c("bayes_paired_wilcox_test", "bayesian_first_aid")
 
-  } else if (is.null(y)) {
+  } else if (one_sample) {
     mcmc_samples <- jags_paired_wilcox_test(zRanksX, zRanksY,
                                             n.chains = 3,
                                             n.iter = ceiling(n.iter / 3),
@@ -197,14 +207,14 @@ paired_samples_wilcox_model_string <- "model {
 for (i in 1:length(pair_diff)) {
   pair_diff[i] ~ dnorm(mu_diff, sigma_diff)
 }
-mu_diff ~ dunif(-1.6, 1.6)-#
+mu_diff ~ dunif(-1.6, 1.6)
 sigma_diff ~ dunif(0, 2.1)
 }"
 
 #Figure out how/whether to include comp.mu!
 
 #Function for JAGS model
-jags_paired_wilcox_test <- function(x, y, comp_mu = 0, n.adapt = 1000,
+jags_paired_wilcox_test <- function(x, y, n.adapt = 1000,
                                     n.chains = 3, n.update = 500,
                                     n.iter = 5000, thin = 1,
                                     progress.bar = "text") {
