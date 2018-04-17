@@ -142,12 +142,12 @@ bayes.wilcox.test.default <- function(x, y = NULL, cred.mass = 0.95,
   #Transform Data
   ranks <- rank(c(x, y))
   ranksX <- ranks[1:nx]
-  ranksY <- ranks[-(1:ny)]
+  ranksY <- ranks[-(1:nx)]
   seqQ <- seq(1, 2*n - 1, by = 2)/(2*n)
   qRanks <- seqQ[ranks]
   zRanks <- qnorm(qRanks)
   zRanksX <- zRanks[1:nx]
-  zRanksY <- zRanks[-(1:ny)]
+  zRanksY <- zRanks[-(1:nx)]
 
 
   ### Running Model. Code adapted from BFA
