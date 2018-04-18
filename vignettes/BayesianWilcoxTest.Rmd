@@ -10,37 +10,120 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The **wilcox_test** R-package implements a Bayesian Alternative to the Wilcoxon 
-Signed Rank test and is intended as an addition to the **BayesianFirstAid** 
-package [@baath2014bayesian]. The approach follows [@gelman2014bayesian, p. 97],
-who  suggest a three-step methodology for a Bayesian approach to the Wilcoxon 
-test. Following this methodology, the **wilcox.test** function first transforms 
-the combined input data to their ranks as in the conventional Wilcoxon 
-procedure. Then, these ranks are normalized into z-scores, and the difference 
-between the two groups is modeled as a normal distribution with uninformative 
-priors. This approach has the following advantages: ... 
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
 
-Note: Consider Mann-Whitney Test! -> test for two independent groups, also
-included in wilcox.test function
+The **bayes.wilcox.test** R-package implements a Bayesian Alternative to the classical
+Wilcoxon Rank test and is intended as an addition to the **BayesianFirstAid** 
+package [@baath2014bayesian]. As in the original Wilcoxon test, the data are 
+substituted by their ranks. Following @gelman2014bayesian, p. 97, the ranks
+are then transformed to the quantiles of a standard Gaussian
+distribution. This allows modeling the transformed data as a Gaussian
+distribution via Bayesian methods with uninformative priors. The resulting 
+posterior distribution can be interpreted similarly to the classical hypothesis
+test, but provides more detailed information and has a more straightforward
+interpretation.  
+The package implements a paired and independent sample test.  
 
-Gelman (blog post): "the Wilcoxon test has a huge assumption which is that the 
-distributions are identical in the two groups. This is a much more important 
-assumption than normality."
+## Introduction
 
-"History of the idea": [@van1953neuer] introduced concept, but used equidistant
-points instead of quantiles. [@gelman2014bayesian, p. 97] using quantiles
+In a frequentist framework, hypothesis testing is performed in a way that is
+distinct from other forms of inference, such as parameter estimation. In a 
+frequentist hypothesis test, the compability of the observed data with a given
+hypothesis on model parameters is assessed, while parameter estimation - for 
+example by maximum likelihood methods - is concerned with finding the parameter
+estimate most compatible with the given data. In probability notation, 
+frequentist hypothesis tests evaluate $P(y|\theta_0)$, known as the p-value -
+i.e. the probability of obtaining the observed data $y$ under the assumption 
+that the model under the null hypothesis, with parameters $\theta_0$, is the 
+true process by which the data are generated. Frequentist maximum likelihood 
+parameter estimation operates by finding the value of $\theta$ for 
+which the likelihood ${\cal L}(\theta|y)$ given the observed data is maximal, 
+which corresponds to the parameter with a p-value of $1$, or $P(y|\theta) = 1$.
+  
+  
+From a Bayesian perspective, parameter estimates and hypothesis tests on 
+parameters both involve the same estimation procedure. The outcome of 
+Bayesian model estimation is a full probability distribution of the parameters
+in question, the posterior distribution $P(\theta|y)$. This posterior 
+distribution can directly be employed to test hypotheses on the parameters at 
+hand.  
 
-[@kruschke2013bayesian, p. 575]: "In the case of data from a single
-group, including the case of a single group of difference scores
-from repeated measures on the same subjects, a modified model
-merely estimates $\mu$, $\sigma$, and $\nu$ of the group." Crucial change from
-independent two paired sample test: two different $\sigma$s vs. a single one
-See Kruschke's 2011 discussion of oneway / twoway ANOVA!
+One way of doing so are Bayes factors, which compare the posterior distributions
+of two models, usually under a null and an alternative hypothesis. The ratio of
+both posterior distributions indicates which model can be considered likely 
+given the observed data. A major difference to frequentist hypothesis tests is
+that evidence both for and against the null hypothesis is considered; thus, the
+equivalent of "accepting" the null hypothesis is possible. The drawback of 
+using Bayes Factors for hypothesis testing is that they can only be usefully 
+employed for clearly discrete alternatives of parameter values, as noted by
+@gelman2014bayesian, p. 182. For continuous models with infinitely many 
+parameter values between alternative hypotheses, the use of Bayes factors is not
+helpful.  
 
-Consider including effect size / How to deal with mu?
+### The BEST Approach
+
+Another way of Bayesian hypothesis testing is presented by 
+@kruschke2013bayesian, who describes a Bayesian alternative to the
+frequentist t-test. This approach was extended to different types of hypothesis
+tests in the **BayesianFirstAid** R-package [@baath2014bayesian], and this the 
+approach is followed for the **bayes.wilcox.test** package. Kruschke's BEST
+("Bayesian Estimation Supersedes the t Test") procedure for the two-sample test
+models the data as Student's t distributions with uninformative priors. The 
+resulting posterior distributions for the $\mu$ parameter of both groups give 
+the probabilies of the means exceeding or falling below any given value, and 
+the probability of their differences ...  
+Advantages of this testing procedure, etc.  
+
+### The Frequentist Wilcoxon
+
+Hypothesis tests such as the frequentist t-Test and BEST are based on the 
+assumption that the data follow a Gaussian (for the frequentist test) or a 
+Student's t distribution (for BEST). In addition, the scale of measurement of 
+the data needs to be an interval scale, which excludes data on an 
+ordinal scale such as grades or ratings. For cases in which these assumptions
+are violated, non-parametric alternatives exist: the Wilcoxon Signed Rank test
+for paired samples, due to @wilcoxon1945individual, and the independent-sample
+Wilcoxon Rank Sum test, also known as the Mann-Whitney test, first proposed by
+@wilcoxon1945individual and further developed by @mann1947test.
 
 
-## Prior Distributions
+  
+
+In the following, a similar Bayesian testing procedure for the frequentist 
+Wilcoxon Rank test will be presented.
+
+
+
+## The Bayesian Wilcoxon Rank Test
+
+The present section describes the estimation procedure for Bayesian Alternative 
+to the frequentist Wilcoxon Rank test which is implemented by the
+**bayes.wilcox.test** package.
+
+### Nonlinear transformation to Gaussian quantiles
+
+The Bayesian Wilcoxon test follows an estimation procedure outlined in 
+@gelman2014bayesian and further described in a blog post by Andrew Gelman
+[@gelman2015dont] for a two-sample test. As in the frequentist Wilcoxon 
+procedure, the data are substituted by their ranks. Subsequently, the ranks
+are transformed to quantiles of a standard Gaussian distribution by applying a
+Gaussian quantile function to the sequence  
+
+$\frac{1}{2n}, \frac{3}{2n}, ..., \frac{2i-1}{2n}, ..., \frac{2n - 1}{2n}$  
+
+which results in a discrete distribution which approaches a standard Gaussian 
+distribution as $n$ increases. A similar approach has been proposed 
+by @van1953neuer, who suggested using a sequence of equidistant points instead 
+of the sequence (). The differences between the resulting transformed ranks for
+two groups can in turn be modeled as a Gaussian distribution.  
+Via Bayesian estimation, 
+
+### Prior Distributions
 (Two-sample case first)  
 
 One-sample case: Assuming $\mu_{diff}$ to come from $N(\mu, 1)$ distribution.
@@ -68,50 +151,38 @@ $\sigma_{x_L} = \sigma_{y_L} \to 0.6028$. The upper limit is given by
 $\sigma_H = 1$, if $x$ and $y$ are "maximally distributed" within the $N(0,1)$
 parent distribution. Priors for $\sigma$ thus set to $Unif(0.6027, 1)$.  
 
+Note [@van1953neuer]: normalized values have discrete distribution!
+asymptoticallly normal distributed. But we don't know their variance (only
+within range). t-Test more appropriate?
 
 
-## Introduction
-
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
-
-## A Bayesian Alternative to the Wilcoxon
-
-### The frequentist Wilcoxon Test
+## The bayes.wilcox.test Package
 
 
 
-## Literature Overview
+## Notes
 
 [@gelman2011bayesian, p.11]: "Even the Wilcoxon Test is based on assumptions!"
 
-## Figures
+Note: Consider Mann-Whitney Test! -> test for two independent groups, also
+included in wilcox.test function
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
+Gelman (blog post): "the Wilcoxon test has a huge assumption which is that the 
+distributions are identical in the two groups. This is a much more important 
+assumption than normality." Cite blog post
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
+"History of the idea": [@van1953neuer] introduced concept, but used equidistant
+points instead of quantiles. [@gelman2014bayesian, p. 97] using quantiles
 
-You can enable figure captions by `fig_caption: yes` in YAML:
+[@kruschke2013bayesian, p. 575]: "In the case of data from a single
+group, including the case of a single group of difference scores
+from repeated measures on the same subjects, a modified model
+merely estimates $\mu$, $\sigma$, and $\nu$ of the group." Crucial change from
+independent two paired sample test: two different $\sigma$s vs. a single one
+See Kruschke's 2011 discussion of oneway / twoway ANOVA!
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
+Consider including effect size / How to deal with mu?
 
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
 
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
 
 ## References
