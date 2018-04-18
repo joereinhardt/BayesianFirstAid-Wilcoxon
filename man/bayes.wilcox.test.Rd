@@ -7,7 +7,7 @@
 \usage{
 bayes.wilcox.test(x, ...)
 
-\method{bayes.wilcox.test}{default}(x, y = NULL, cred.mass = 0.95, mu = 0,
+\method{bayes.wilcox.test}{default}(x, y, cred.mass = 0.95, mu = 0,
   paired = FALSE, n.iter = 30000, alternative = NULL, exact = NULL,
   correct = NULL, conf.int = NULL, conf.level, progress.bar = "text", ...)
 }

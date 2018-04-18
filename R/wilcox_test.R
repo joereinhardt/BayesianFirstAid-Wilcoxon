@@ -62,7 +62,7 @@ bayes.wilcox.test <- function(x, ...){
 #Note: needs to take same input as wilcox.test()
 #' @export
 #' @rdname bayes.wilcox.test
-bayes.wilcox.test.default <- function(x, y = NULL, cred.mass = 0.95,
+bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                       mu = 0,
                                       paired = FALSE,
                                       n.iter = 30000,
@@ -74,11 +74,6 @@ bayes.wilcox.test.default <- function(x, y = NULL, cred.mass = 0.95,
                                       progress.bar = "text", ...) {
   ### Original (but slighly modified) code from t.test.default ###
 
-  if (is.null(y)) {
-    one_sample = TRUE
-    } else {
-    one_sample = FALSE
-    }
   #If statements from BFA
   if (!missing(conf.level)) {
     cred.mass <- conf.level
@@ -109,19 +104,12 @@ bayes.wilcox.test.default <- function(x, y = NULL, cred.mass = 0.95,
                                 cred.mass < 0 || cred.mass > 1))
       stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
 
-   if (one_sample) {
-     y <- c(rep(mu, length(x)))
-   }
 
   # removing incomplete cases and preparing the data vectors (x & y)
   x_name <- deparse(substitute(x))
-  if (one_sample) {
-    y_name <- NULL
-    data_name <- paste(x_name)
-  } else {
-    y_name <- deparse(substitute(y))
-    data_name <- paste(x_name, "and", y_name)
-  }
+  y_name <- deparse(substitute(y))
+  data_name <- paste(x_name, "and", y_name)
+
   if (paired)
     xok <- yok <- complete.cases(x, y)
   else {
@@ -149,10 +137,9 @@ bayes.wilcox.test.default <- function(x, y = NULL, cred.mass = 0.95,
   zRanksX <- zRanks[1:nx]
   zRanksY <- zRanks[-(1:nx)]
 
-
   ### Running Model. Code adapted from BFA
   #Run model
-  if (paired) {
+  if (paired == TRUE) {
   mcmc_samples <- jags_paired_wilcox_test(zRanksX, zRanksY,
                                           n.chains = 3,
                                           n.iter = ceiling(n.iter / 3),
@@ -167,23 +154,6 @@ bayes.wilcox.test.default <- function(x, y = NULL, cred.mass = 0.95,
                      y_data_expr = y_name, mcmc_samples = mcmc_samples,
                      stats = stats)
   class(bfa_object) <- c("bayes_paired_wilcox_test", "bayesian_first_aid")
-
-  } else if (one_sample) {
-    mcmc_samples <- jags_paired_wilcox_test(zRanksX, zRanksY,
-                                            n.chains = 3,
-                                            n.iter = ceiling(n.iter / 3),
-                                            progress.bar = progress.bar)
-    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass,
-                        comp_val = mu)
-    #quick fix to get around utility function not assigning names if
-    #only one var
-    rownames(stats) <- "mu_diff"
-    bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu,
-                       cred_mass = cred.mass, x_name = x_name, y_name = y_name,
-                       data_name = data_name, x_data_expr = x_name,
-                       y_data_expr = y_name, mcmc_samples = mcmc_samples,
-                       stats = stats)
-    class(bfa_object) <- c("bayes_paired_wilcox_test", "bayesian_first_aid")
 
   } else {
   mcmc_samples <- jags_two_sample_wilcox_test(zRanksX, zRanksY, n.chains = 3,
