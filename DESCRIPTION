@@ -1,4 +1,4 @@
-Package: wilcoxTest
+Package: bayesWilcoxTest
 Type: Package
 Title: A Bayesian Alternative to the Wilcoxon Signed Rank Test 
 Version: 0.1.0
