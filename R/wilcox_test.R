@@ -9,7 +9,7 @@
 #' fits a normal model using JAGS after rank-transformation.
 #'
 #' For the two-sample wilcox test, the posterior distribution is obtained as
-#' follows:
+#' follows (CHANGE sigma_high!):
 #'
 #' \figure{twoSampleWilcoxDiagram.svg}{options: height=400}
 #'
@@ -234,7 +234,7 @@ jags_two_sample_wilcox_test <- function(x, y,
                     y = y,
                     mu_low = qnorm(1/(2*n)),
                     mu_high = qnorm((2*n - 1)/(2*n)),
-                    sigma_high = qnorm((2*n - 1)/(2*n))^2)
+                    sigma_high = qnorm(1/(2*n)))
 
   inits_list <- list( #Assume parameters under equal distribution for x, y
     mu_x = 0,
