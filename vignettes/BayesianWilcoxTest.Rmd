@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-The **bayes.wilcox.test** R-package implements a Bayesian Alternative to the classical
+The **bayesWilcoxTest** R-package implements a Bayesian Alternative to the classical
 Wilcoxon Rank test and is intended as an addition to the **BayesianFirstAid** 
 package [@baath2014bayesian]. As in the original Wilcoxon test, the data are 
 substituted by their ranks. Following @gelman2014bayesian, p. 97, the ranks
@@ -71,7 +71,7 @@ Another way of Bayesian hypothesis testing is presented by
 @kruschke2013bayesian, who describes a Bayesian alternative to the
 frequentist t-test. This approach was extended to different types of hypothesis
 tests in the **BayesianFirstAid** R-package [@baath2014bayesian], and this the 
-approach is followed for the **bayes.wilcox.test** package. Kruschke's BEST
+approach followed for the **bayesWilcoxTest** package. Kruschke's BEST
 ("Bayesian Estimation Supersedes the t Test") procedure for the two-sample test
 models the data as Student's t distributions with uninformative priors. The 
 resulting posterior distributions for the $\mu$ parameter of both groups give 
@@ -114,16 +114,74 @@ procedure, the data are substituted by their ranks. Subsequently, the ranks
 are transformed to quantiles of a standard Gaussian distribution by applying a
 Gaussian quantile function to the sequence  
 
-$\frac{1}{2n}, \frac{3}{2n}, ..., \frac{2i-1}{2n}, ..., \frac{2n - 1}{2n}$  
+$$\frac{1}{2n}, \frac{3}{2n}, ..., \frac{2i-1}{2n}, ..., \frac{2n - 1}{2n}$$
 
 which results in a discrete distribution which approaches a standard Gaussian 
 distribution as $n$ increases. A similar approach has been proposed 
 by @van1953neuer, who suggested using a sequence of equidistant points instead 
 of the sequence (). The differences between the resulting transformed ranks for
 two groups can in turn be modeled as a Gaussian distribution.  
-Via Bayesian estimation, 
+Via Bayesian estimation, a model with uninformative priors can be estimated in
+order to obtain a BEST-style hypothesis test.
 
 ### Prior Distributions
+
+For the two-sample case, both groups are modeled as independent Gaussian 
+distributions. Thus, prior distributions for the mean and variance of both 
+groups are required. In order to keep these priors uninformative, uniform 
+distributions are employed, and since the distribution of the transformed ranks
+is known and depends only on the sample size, the upper and lower limits of the
+prior distributions can be derived.  
+
+For the variance, the lower limit is zero, since it is possible that all data
+from one group have the same value, resulting in the assignment of tied ranks 
+which are all equal and thus a variance of zero. The maximum variance is 
+realized if one group consists only of two data points, which at the same time
+are the highest and lowest value of both groups combined. The transformed ranks
+assigned to these two values depend on the overall sample size. The smallest 
+transformed rank is given by $Z_{min} = \Phi^{-1}(\frac{1}{2n})$, the largest by 
+$Z_{max} = \Phi{-1}(\frac{2n-1}{2n})$. Due to the symmetry of the Gaussian 
+quantile function, $Z_{min} = -Z_{max}$, which implies a zero mean for the two 
+values. The maximum variance is thus given by  
+
+$$\sigma^2_{max}(n) = \frac{1}{2}(\Phi^{-1}(\frac{1}{2n}))^2 + 
+\frac{1}{2}(\Phi^{-1}(\frac{1}{2n}))^2 = (\Phi^{-1}(\frac{1}{2n}))^2$$ 
+
+which results in a maximum standard deviation of 
+$\sigma_{max}(n)=\Phi^{-1}(\frac{1}{2n})$.  
+
+The lowest possible mean for one of the two groups is realized if this group
+again consists only of two data points, which are the two lowest values of the
+overall data. Their transformed ranks would then be given by 
+$Z_{min1} = \Phi^{-1}(\frac{1}{2n})$ and $Z_{min2} = \Phi^{-1}(\frac{3}{2n})$,
+resulting in a lowest possible mean of  
+
+$$\mu_{min}(n) =  \frac{1}{2}(\Phi^{-1}(\frac{1}{2n}) +
+\Phi^{-1}(\frac{3}{2n}))$$
+
+and, due to symmetry of the quantile function, a highest possible mean of  
+
+$$\mu_{max}(n) =  -\frac{1}{2}(\Phi^{-1}(\frac{1}{2n}) +
+\Phi^{-1}(\frac{3}{2n}))$$  
+
+The priors on the means for both groups are thus given by a uniform distribution
+... Since the 
+
+For the paired sample test, the single target posterior distribution is the 
+difference between the transformed ranks of both groups. Again, uniformly
+distributed priors are employed for the mean and variance.  
+
+In the paired sample case, the variance depends on the ordering of the 
+observations in the two groups.
+A value of zero can be realized if all values in the first 
+group are smaller than all values in the second group, and both groups are 
+sorted in ascending order. The difference in transformed ranks would then be
+the same for all pairs of values, resulting in a smallest possible variance of 
+zero.  
+The maximum variance 
+
+
+
 (Two-sample case first)  
 
 One-sample case: Assuming $\mu_{diff}$ to come from $N(\mu, 1)$ distribution.
