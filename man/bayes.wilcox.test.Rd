@@ -64,7 +64,7 @@ fits a normal model using JAGS after rank-transformation.
 }
 \details{
 For the two-sample wilcox test, the posterior distribution is obtained as
-follows:
+follows (CHANGE sigma_high!):
 
 \figure{twoSampleWilcoxDiagram.svg}{options: height=400}
 
