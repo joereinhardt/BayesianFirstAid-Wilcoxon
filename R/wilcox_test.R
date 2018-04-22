@@ -47,6 +47,7 @@
 #'
 #' @examples
 #' # Using the examples from the wilcox.test help:
+#'
 #' # One-sample (Paired sample) test.
 #' # Hollander & Wolfe (1973), 29f.
 #' # Hamilton depression scale factor measurements in 9 patients with
@@ -65,9 +66,9 @@
 #' # Visual Inspection
 #' plot(pairedBayesWilcox)
 #' # Diagnostics for MCMC
-#' diagnostics(pairedWilcoxTest)
+#' diagnostics.bayes_paired_wilcox_test(pairedBayesWilcox)
 #' # Print out the model code, which can be modified
-#' model.code(pairedWilcoxTest)
+#' model.code.bayes_paired_wilcox_test(pairedBayesWilcox)
 #' # Classical Wilcox Test for comparison
 #' wilcox.test(x, y, paired = TRUE, alternative = "greater")
 #'
@@ -88,11 +89,16 @@
 #' # Visual Inspection
 #' plot(indBayesWilcox)
 #' # Diagnostics for MCMC
-#' diagnostics(indBayesWilcox)
+#' diagnostics.bayes_two_sample_wilcox_test(indBayesWilcox)
 #' # Print out the model code, which can be modified
-#' model.code(indBayesWilcox)
+#' model.code.bayes_two_sample_wilcox_test(indBayesWilcox)
 #' # Classical Wilcox Test for comparison
 #' wilcox.test(x, y, alternative = "greater")
+#'
+#' @references Myles Hollander and Douglas A. Wolfe (1973), \emph{Nonparametric
+#'   Statistical Methods.} New York: John Wiley & Sons. Pages 27–33 (one-sample),
+#'   68–75 (two-sample).
+#'   Or second edition (1999).
 #'
 #' @import coda
 #' @import rjags
@@ -389,12 +395,19 @@ plot.bayes_paired_wilcox_test <- function(x, ...) {
 #' This is good if you better want to understand how the model is
 #' implemented or if you want to run a modified version of the code.
 #'
-#'
-#' @param fit The output from a Bayesian First Aid model.
 #' @export
+#' @param fit The output from a Bayesian First Aid model.
+
 
 # Note: function not recognized as S3, needs to be called by
-# model.code.bayes_wilcox_test()
+# model.code.bayes_paired_wilcox_test().
+# #' method model.code bayes_paired_wilcox_test
+# does not fix the issue. Same problem for:
+# model.code.bayes_two_sample_wilcox_test,
+# diagnostics.bayes_paired__wilcox_test,
+# diagnostics.bayes_two_sample_wilcox_test
+
+
 model.code.bayes_paired_wilcox_test <- function(fit) {
   cat("### Model code for the Bayesian First Aid alternative to the Wilcox",
       "paired sample test ###\n\n")
@@ -445,15 +458,13 @@ paired_samples_wilcox_model_code <- inject_model_string(
 #'
 #' @param x The output from a Bayesian First Aid model.
 #' @export
-# Note: function not recognized as S3, needs to be called by
-# model.code.bayes_wilcox_test()
 
 diagnostics.bayes_paired_wilcox_test <- function(x) {
   print_mcmc_info(x$mcmc_samples)
   cat("\n")
   print_diagnostics_measures(round(x$stats, 3))
   cat("\n")
-  cat("  Model parameters and generated quantities\n")
+  cat("Model parameters and generated quantities\n")
   cat("mu_diff: the difference in means of ", x$x_name, "and",
       x$y_name, "\n")
 
@@ -567,7 +578,6 @@ plot.bayes_two_sample_wilcox_test <- function(x, ...) {
 #'
 #' This is good if you better want to understand how the model is
 #' implemented or if you want to run a modified version of the code.
-#'
 #'
 #' @param fit The output from a Bayesian First Aid model.
 #' @export

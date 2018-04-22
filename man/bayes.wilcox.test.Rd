@@ -92,9 +92,9 @@ summary(pairedBayesWilcox)
 # Visual Inspection
 plot(pairedBayesWilcox)
 # Diagnostics for MCMC
-diagnostics(pairedWilcoxTest)
+diagnostics.bayes_paired_wilcox_test(pairedBayesWilcox)
 # Print out the model code, which can be modified
-model.code(pairedWilcoxTest)
+model.code.bayes_paired_wilcox_test(pairedBayesWilcox)
 # Classical Wilcox Test for comparison
 wilcox.test(x, y, paired = TRUE, alternative = "greater")
 
@@ -115,10 +115,16 @@ summary(indBayesWilcox)
 # Visual Inspection
 plot(indBayesWilcox)
 # Diagnostics for MCMC
-diagnostics(indBayesWilcox)
+diagnostics.bayes_two_sample_wilcox_test(indBayesWilcox)
 # Print out the model code, which can be modified
-model.code(indBayesWilcox)
+model.code.bayes_two_sample_wilcox_test(indBayesWilcox)
 # Classical Wilcox Test for comparison
 wilcox.test(x, y, alternative = "greater")
 
+}
+\references{
+Myles Hollander and Douglas A. Wolfe (1973), \emph{Nonparametric
+  Statistical Methods.} New York: John Wiley & Sons. Pages 27–33 (one-sample),
+  68–75 (two-sample).
+  Or second edition (1999).
 }
