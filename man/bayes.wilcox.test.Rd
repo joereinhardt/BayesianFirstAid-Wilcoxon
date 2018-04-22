@@ -72,3 +72,53 @@ Diagram for the one-sample test:
 
 \figure{oneSampleWilcoxDiagram.svg}{options: height=250}
 }
+\examples{
+# Using the examples from the wilcox.test help:
+# One-sample (Paired sample) test.
+# Hollander & Wolfe (1973), 29f.
+# Hamilton depression scale factor measurements in 9 patients with
+# mixed anxiety and depression, taken at the first (x) and second
+# (y) visit after initiation of a therapy (administration of a
+# tranquilizer).
+x <- c(1.83,  0.50,  1.62,  2.48, 1.68, 1.88, 1.55, 3.06, 1.30)
+y <- c(0.878, 0.647, 0.598, 2.05, 1.06, 1.29, 1.06, 3.14, 1.29)
+# Performing a paired-sample Bayesian Wilcox test. The function can be used
+# in exactly the same way as wilcox.test:
+pairedBayesWilcox <- bayes.wilcox.test(x, y, paired = TRUE,
+      alternative = "greater")
+# Note that the argument "alternative" is ignored by bayes.wilcox.test
+# Test summary
+summary(pairedBayesWilcox)
+# Visual Inspection
+plot(pairedBayesWilcox)
+# Diagnostics for MCMC
+diagnostics(pairedWilcoxTest)
+# Print out the model code, which can be modified
+model.code(pairedWilcoxTest)
+# Classical Wilcox Test for comparison
+wilcox.test(x, y, paired = TRUE, alternative = "greater")
+
+
+# Two-sample (independent) test.
+# Hollander & Wolfe (1973), 69f.
+# Permeability constants of the human chorioamnion (a placental
+# membrane) at term (x) and between 12 to 26 weeks gestational
+# age (y).  The alternative of interest is greater permeability
+# of the human chorioamnion for the term pregnancy.
+x <- c(0.80, 0.83, 1.89, 1.04, 1.45, 1.38, 1.91, 1.64, 0.73, 1.46)
+y <- c(1.15, 0.88, 0.90, 0.74, 1.21)
+indBayesWilcox <- bayes.wilcox.test(x, y, alternative = "greater")
+                              # Note that the argument "alternative" is
+                              # ignored by bayes.wilcox.test
+# Test summary
+summary(indBayesWilcox)
+# Visual Inspection
+plot(indBayesWilcox)
+# Diagnostics for MCMC
+diagnostics(indBayesWilcox)
+# Print out the model code, which can be modified
+model.code(indBayesWilcox)
+# Classical Wilcox Test for comparison
+wilcox.test(x, y, alternative = "greater")
+
+}

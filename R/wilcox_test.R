@@ -45,6 +45,55 @@
 #'  using the functions \code{summary}, \code{plot}, \code{diagnostics}
 #'  and \code{model.code}.
 #'
+#' @examples
+#' # Using the examples from the wilcox.test help:
+#' # One-sample (Paired sample) test.
+#' # Hollander & Wolfe (1973), 29f.
+#' # Hamilton depression scale factor measurements in 9 patients with
+#' # mixed anxiety and depression, taken at the first (x) and second
+#' # (y) visit after initiation of a therapy (administration of a
+#' # tranquilizer).
+#' x <- c(1.83,  0.50,  1.62,  2.48, 1.68, 1.88, 1.55, 3.06, 1.30)
+#' y <- c(0.878, 0.647, 0.598, 2.05, 1.06, 1.29, 1.06, 3.14, 1.29)
+#' # Performing a paired-sample Bayesian Wilcox test. The function can be used
+#' # in exactly the same way as wilcox.test:
+#' pairedBayesWilcox <- bayes.wilcox.test(x, y, paired = TRUE,
+#'       alternative = "greater")
+#' # Note that the argument "alternative" is ignored by bayes.wilcox.test
+#' # Test summary
+#' summary(pairedBayesWilcox)
+#' # Visual Inspection
+#' plot(pairedBayesWilcox)
+#' # Diagnostics for MCMC
+#' diagnostics(pairedWilcoxTest)
+#' # Print out the model code, which can be modified
+#' model.code(pairedWilcoxTest)
+#' # Classical Wilcox Test for comparison
+#' wilcox.test(x, y, paired = TRUE, alternative = "greater")
+#'
+#'
+#' # Two-sample (independent) test.
+#' # Hollander & Wolfe (1973), 69f.
+#' # Permeability constants of the human chorioamnion (a placental
+#' # membrane) at term (x) and between 12 to 26 weeks gestational
+#' # age (y).  The alternative of interest is greater permeability
+#' # of the human chorioamnion for the term pregnancy.
+#' x <- c(0.80, 0.83, 1.89, 1.04, 1.45, 1.38, 1.91, 1.64, 0.73, 1.46)
+#' y <- c(1.15, 0.88, 0.90, 0.74, 1.21)
+#' indBayesWilcox <- bayes.wilcox.test(x, y, alternative = "greater")
+#'                               # Note that the argument "alternative" is
+#'                               # ignored by bayes.wilcox.test
+#' # Test summary
+#' summary(indBayesWilcox)
+#' # Visual Inspection
+#' plot(indBayesWilcox)
+#' # Diagnostics for MCMC
+#' diagnostics(indBayesWilcox)
+#' # Print out the model code, which can be modified
+#' model.code(indBayesWilcox)
+#' # Classical Wilcox Test for comparison
+#' wilcox.test(x, y, alternative = "greater")
+#'
 #' @import coda
 #' @import rjags
 #' @import stats
@@ -178,7 +227,7 @@ for (i in 1:length(pair_diff)) {
   pair_diff[i] ~ dnorm(mu_diff, sigma_diff)
 }
 mu_diff ~ dunif(-1.6, 1.6)
-sigma_diff ~ dunif(0, 2.1)
+sigma_diff ~ dunif(0, 2)
 }"
 
 #Figure out how/whether to include comp.mu!
@@ -234,7 +283,7 @@ jags_two_sample_wilcox_test <- function(x, y,
                     y = y,
                     mu_low = qnorm(1/(2*n)),
                     mu_high = qnorm((2*n - 1)/(2*n)),
-                    sigma_high = qnorm(1/(2*n)))
+                    sigma_high = -qnorm(1/(2*n)))
 
   inits_list <- list( #Assume parameters under equal distribution for x, y
     mu_x = 0,
@@ -335,7 +384,6 @@ plot.bayes_paired_wilcox_test <- function(x, ...) {
 }
 
 #Adapted from model.code.bayes_binom_test
-#output code not yet running!
 #' Prints code that replicates the model you just ran.
 #'
 #' This is good if you better want to understand how the model is
