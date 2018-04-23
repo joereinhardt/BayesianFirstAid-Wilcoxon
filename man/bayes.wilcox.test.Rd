@@ -73,7 +73,7 @@ Diagram for the one-sample test:
 \figure{oneSampleWilcoxDiagram.svg}{options: height=275}
 }
 \examples{
-# Using the examples from the wilcox.test help:
+# Using examples copied from the wilcox.test help file:
 
 # One-sample (Paired sample) test.
 # Hollander & Wolfe (1973), 29f.
