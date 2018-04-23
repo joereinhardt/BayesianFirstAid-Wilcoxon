@@ -9,13 +9,13 @@
 #' fits a normal model using JAGS after rank-transformation.
 #'
 #' For the two-sample wilcox test, the posterior distribution is obtained as
-#' follows (CHANGE sigma_high!):
+#' follows:
 #'
 #' \figure{twoSampleWilcoxDiagram.svg}{options: height=400}
 #'
 #' Diagram for the one-sample test:
 #'
-#' \figure{oneSampleWilcoxDiagram.svg}{options: height=250}
+#' \figure{oneSampleWilcoxDiagram.svg}{options: height=275}
 #'
 #' @param x numeric vector of data values
 #' @param y numeric vector of data values to be compared to x
@@ -233,7 +233,7 @@ for (i in 1:length(pair_diff)) {
   pair_diff[i] ~ dnorm(mu_diff, sigma_diff)
 }
 mu_diff ~ dunif(-1.6, 1.6)
-sigma_diff ~ dunif(0, 2)
+sigma_diff ~ dunif(0, sigma_high)
 }"
 
 #Figure out how/whether to include comp.mu!
@@ -244,7 +244,9 @@ jags_paired_wilcox_test <- function(x, y, n.adapt = 1000,
                                     n.iter = 5000, thin = 1,
                                     progress.bar = "text") {
   pair_diff <- x - y
-  data_list <- list(pair_diff = pair_diff)
+  n <- length(x) + length(y)
+  data_list <- list(pair_diff = pair_diff,
+                    sigma_high = -2*qnorm(1/(2*n)))
   inits_list <- list(mu_diff = 0)
   params <- c("mu_diff")
   mcmc_samples <- run_jags(paired_samples_wilcox_model_string,

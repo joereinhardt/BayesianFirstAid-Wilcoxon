@@ -64,16 +64,17 @@ fits a normal model using JAGS after rank-transformation.
 }
 \details{
 For the two-sample wilcox test, the posterior distribution is obtained as
-follows (CHANGE sigma_high!):
+follows:
 
 \figure{twoSampleWilcoxDiagram.svg}{options: height=400}
 
 Diagram for the one-sample test:
 
-\figure{oneSampleWilcoxDiagram.svg}{options: height=250}
+\figure{oneSampleWilcoxDiagram.svg}{options: height=275}
 }
 \examples{
 # Using the examples from the wilcox.test help:
+
 # One-sample (Paired sample) test.
 # Hollander & Wolfe (1973), 29f.
 # Hamilton depression scale factor measurements in 9 patients with

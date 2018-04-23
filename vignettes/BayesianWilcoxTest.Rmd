@@ -140,15 +140,15 @@ realized if one group consists only of two data points, which at the same time
 are the highest and lowest value of both groups combined. The transformed ranks
 assigned to these two values depend on the overall sample size. The smallest 
 transformed rank is given by $Z_{min} = \Phi^{-1}(\frac{1}{2n})$, the largest by 
-$Z_{max} = \Phi{-1}(\frac{2n-1}{2n})$. Due to the symmetry of the Gaussian 
+$Z_{max} = \Phi^{-1}(\frac{2n-1}{2n})$. Due to the symmetry of the Gaussian 
 quantile function, $Z_{min} = -Z_{max}$, which implies a zero mean for the two 
 values. The maximum variance is thus given by  
 
-$$\sigma^2_{max}(n) = \frac{1}{2}(\Phi^{-1}(\frac{1}{2n}))^2 + 
-\frac{1}{2}(\Phi^{-1}(\frac{1}{2n}))^2 = (\Phi^{-1}(\frac{1}{2n}))^2$$ 
+$$\sigma^2_{max}(n) = \frac{1}{2}(\Phi^{-1}(\frac{2n-1}{2n}))^2 + 
+\frac{1}{2}(\Phi^{-1}(\frac{2n-1}{2n}))^2 = (\Phi^{-1}(\frac{2n-1}{2n}))^2$$ 
 
 which results in a maximum standard deviation of 
-$\sigma_{max}(n)=\Phi^{-1}(\frac{1}{2n})$.  
+$\sigma_{max}(n) = \Phi^{-1}(\frac{2n-1}{2n}) = -\Phi^{-1}(\frac{1}{2n})$.  
 
 The lowest possible mean for one of the two groups is realized if this group
 again consists only of two data points, which are the two lowest values of the
@@ -178,41 +178,51 @@ group are smaller than all values in the second group, and both groups are
 sorted in ascending order. The difference in transformed ranks would then be
 the same for all pairs of values, resulting in a smallest possible variance of 
 zero.  
-The maximum variance 
+As the variance depends on the ordering of the observations, the largest
+possible variance is more difficult to estimate exactly. The maximum variance of
+the differences in transformed ranks is larger than the variance of the 
+individual transformed ranks, thus, a larger upper limit than in the two-sample
+case is required.  
+**bayesWilcoxTest** uses the range of the transformed ranks as a rough estimate
+of the upper limit of the standard deviation, since the standard deviation 
+cannot exceed this value here. The range of the transformed ranks is, due to 
+symmetry, twice the largest of the transformed rank values, i.e.
+$$ \sigma_{max}(n) = 2\Phi^{-1}(\frac{2n-1}{2n}) = -2\Phi^{-1}(\frac{1}{2n})$$
 
+The largest and smallest possible mean of the differences in transformed ranks
+can be obtained in a more straightforward fashion. The smallest mean will be 
+realized if all elements in $x$ are larger than all values in $y$, and vice 
+versa - due to symmetry, $\mu_{min} = -\mu_{max}$. Calculating the possible 
+means for $x > y$ for different sample sizes reveals that $\mu_{max}$ converges
+to a value just below $1.6$:
+```{r}
+pairDiff_means <- function(N) {
+  #create x and y so that x > y
+  x <- seq(1.1, 2.1, by = (1/(N - 1)))
+  y <- seq(0, 1, by = (1/(N - 1)))
+  n <- length(x) + length(y)
+  ranks <- rank(c(x, y)) # Replace by ranks
+  #Tranformed Ranks
+  seqQ <- seq(1, 2*n - 1, by = 2)/(2*n)
+  zRanks <- qnorm(seqQ[ranks])
+  zRanksX <- zRanks[1:length(x)]
+  zRanksY <- zRanks[-(1:length(x))]
+  mean_diff <- mean(zRanksX - zRanksY)
+  return(mean_diff)
+}
+means <- c()
+for (i in 2:500) {
+  means <- c(means, pairDiff_means(i))
+}
+plot(means, type = "l", ylab = "mu_max",  xlab = "N")
+```
 
+The upper and lower limits of the unifrom prior distribution for the mean of
+transformed differences are thus $\mu_{min} = -1.6$ and $\mu_{max} = 1.6$.
 
-(Two-sample case first)  
-
-One-sample case: Assuming $\mu_{diff}$ to come from $N(\mu, 1)$ distribution.
-Thus, a prior is needed only for $\mu$. Maximum and Minimum value of 
-$\mu_{diff}$:
-Occur when all values from sample $x$ are larger than the values from sample
-$y$. Figure out Min. / Max. by Simulation:  
-
-Generate $n$ nonequal values for $x$ and $y$, where $x_i > y_i$ for all $i$.
-Perform rank-z-score transform and calculate the mean z-score for $x$ and $y$:  
-$\bar{z}_x = \frac{1}{n} \sum^n_{i=1} z_{x_i}$, equivalently for $y$. For large
-$n$, $\bar{z}_x-\bar{z}_y \to 1.5958$. Exchanging $x$ and $y$ leads to 
-$\bar{z}_y - \bar{z}_x \to -1.5958$. Employing a uniformly distributed prior,
-the prior for $\mu_{diff}$ is $Unif(-1.5958, 1.5958)$. (Check if there is a
-more flexible $Beta$-representation)
-
-For two sample case:  
-$\mu_x$ and $\mu_y$ come from separate $N(\mu, \sigma)$ distributions -- priors
-are needed for both $\mu$ and $\sigma$. From simulation, large $n$: 
-$\bar{z}_x \to 0.7979$, $\bar{z}_y \to -0.7979$. Thus, priors for $\mu_x$ and
-$\mu_y$ are set to $Unif(-0.7979, 0.7979)$.  
-For priors on $\sigma$, the simulation should also give the lower limit for 
-possible values of $\sigma$ (is this true?). Results give  
-$\sigma_{x_L} = \sigma_{y_L} \to 0.6028$. The upper limit is given by 
-$\sigma_H = 1$, if $x$ and $y$ are "maximally distributed" within the $N(0,1)$
-parent distribution. Priors for $\sigma$ thus set to $Unif(0.6027, 1)$.  
-
-Note [@van1953neuer]: normalized values have discrete distribution!
-asymptoticallly normal distributed. But we don't know their variance (only
-within range). t-Test more appropriate?
-
+For both the paired and independent sample case, initial values for the MCMC
+are set to $\mu = 0$ and $\sigma = 1$, i.e., the values which are obtained 
+under the null hypothesis.
 
 ## The bayes.wilcox.test Package
 
