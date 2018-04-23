@@ -8,6 +8,7 @@ vignette: >
   %\VignetteIndexEntry{A Bayesian Alternative to the Wilcoxon Rank Test}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteDepends{BayesianFirstAid}
 ---
 
 ```{r setup, include = FALSE}
@@ -34,8 +35,9 @@ The package implements a paired and independent sample test.
 In a frequentist framework, hypothesis testing is performed in a way that is
 distinct from other forms of inference, such as parameter estimation. In a 
 frequentist hypothesis test, the compability of the observed data with a given
-hypothesis on model parameters is assessed, while parameter estimation - for 
-example by maximum likelihood methods - is concerned with finding the parameter
+(null-)hypothesis on model parameters is assessed, without any regard to which 
+model parameter best fits the given data.
+Parameter estimation, on the other hand, is concerned with finding the parameter
 estimate most compatible with the given data. In probability notation, 
 frequentist hypothesis tests evaluate $P(y|\theta_0)$, known as the p-value -
 i.e. the probability of obtaining the observed data $y$ under the assumption 
@@ -76,8 +78,43 @@ approach followed for the **bayesWilcoxTest** package. Kruschke's BEST
 models the data as Student's t distributions with uninformative priors. The 
 resulting posterior distributions for the $\mu$ parameter of both groups give 
 the probabilies of the means exceeding or falling below any given value, and 
-the probability of their differences ...  
-Advantages of this testing procedure, etc.  
+the probability of their differences falling below or above zero give the 
+probability that the mean of the first group is higher or lower than the mean of
+the second group.  
+This way of Bayesian hypothesis testing can be illustrated using the 
+**BayesianFirstAid**-alternative to the frequentist binomial test procedure.
+
+```{r, message = FALSE}
+require(BayesianFirstAid)
+```
+
+Setting up an example data set of $68$ successes out of $92$ trials, the 
+frequentist test of the null hypothesis that the rate of success is $0.75$ or 
+greater gives a p-value of $0.44$. Applying a standardly employed cutoff value
+of 0.05, the test cannot reject the null hypothesis.
+
+```{r}
+#Setting up example data
+data <- c(68, 24)
+#Classical test
+binom.test(data, p = 3/4, alternative = "l")
+```
+
+**BayesianFirstAid**'s binomial test gives a full posterior distribution of the 
+parameter $\theta$, the rate of success. While a significant portion, $37\%$,
+of the posterior mass lies above $0.75$, the test indicates that $\theta$ is 
+more likely to lie below $0.75$, with a probability of $63\%$. This additional
+information, as well as the fact that the posterior densities can directly be 
+interpreted as the probability of the parameter falling into a certain range,
+are advantages of BEST-style Bayesian hypothesis tests.
+
+```{r, fig.width = 5, fig.height = 5}
+#Bayesian Alternative
+bayesBinom <- bayes.binom.test(data, p = 3/4)
+print(bayesBinom)
+plot(bayesBinom)
+```
+
 
 ### The Frequentist Wilcoxon
 
@@ -91,38 +128,73 @@ for paired samples, due to @wilcoxon1945individual, and the independent-sample
 Wilcoxon Rank Sum test, also known as the Mann-Whitney test, first proposed by
 @wilcoxon1945individual and further developed by @mann1947test.
 
+The Wilcoxon Rank test attains robustness against outliers by transforming the
+data to their ranks. The means of two samples can thus be compared by the
+relative sizes of their data points, without reference to their absolute 
+magnitudes. Thus, the test does not assume that the data are normally 
+distributed; however, the assumption that both samples are drawn from the 
+same distribution is made.  
 
-  
+Under the null hypothesis of both samples being drawn from a population with
+the same mean, the exact (discrete) distribution of the ranks depending on the 
+sample size can be obtained. The procedures are different for the paired
+sample Wilcoxon Signed Rank test and the independent sample Mann-Whitney test.  
 
-In the following, a similar Bayesian testing procedure for the frequentist 
-Wilcoxon Rank test will be presented.
+Assuming that the two groups $x$ and $y$ were obtained from independent samples,
+the Mann-Whitney test first assigns a rank to each data point reflecting their 
+relative position in the combined data from $x$ and $y$, resulting in the ranks
+$r_x$ and $r_y$. Since the overall ranks are the same for any dataset of a 
+given size $n$, the sum of the ranks $r_x$ and $r_y$ can be compared to the 
+sum of ranks to be expected if the overall ranks were equally distributed among
+$x$ and $y$, which corresponds to the null hypothesis of $x$ and $y$ having 
+the same mean. The expected sum for a given group is equal to the average rank
+assigned for a given sample size times the number of observations in the 
+group. For sample of $n_x = 8$ values in the first sample and $n_y = 4$ values
+in the second sample for
+combined sample size of $n= n_x + n_y = 12$, the total sum of ranks
+is equal to $78$, with an average rank of $6.5$. Under the null hypothesis, the 
+sum of the ranks $r_x$ would thus be equal to $52$, with $\sum r_y = 26$.  
 
+The paired sample Wilcoxon Signed Rank test operates by first taking the 
+differences between the two samples, $d = x - y$, and then assigning ranks to 
+these differences, $r_d$. Depending on whether the respective value of $d$ is
+positive or negative, the $r_d$s are assigned a positive or negative sign, and
+the sum of these signed ranks is computed. Under the null hypothesis, the sum of
+the signed ranks is expected to be zero.  
+
+In the following, a BEST-style Bayesian testing procedure as an alternative to
+the frequentist Wilcoxon Rank test will be presented.
 
 
 ## The Bayesian Wilcoxon Rank Test
 
 The present section describes the estimation procedure for Bayesian Alternative 
-to the frequentist Wilcoxon Rank test which is implemented by the
+to the frequentist Wilcoxon Rank test, which is implemented by the
 **bayes.wilcox.test** package.
 
 ### Nonlinear transformation to Gaussian quantiles
 
 The Bayesian Wilcoxon test follows an estimation procedure outlined in 
 @gelman2014bayesian and further described in a blog post by Andrew Gelman
-[@gelman2015dont] for a two-sample test. As in the frequentist Wilcoxon 
-procedure, the data are substituted by their ranks. Subsequently, the ranks
-are transformed to quantiles of a standard Gaussian distribution by applying a
-Gaussian quantile function to the sequence  
+[@gelman2015dont]. As in the frequentist Wilcoxon 
+procedure, the data are substituted by their ranks in the combined sample. 
+Subsequently, the ranks are transformed to quantiles of a standard Gaussian 
+distribution by applying a Gaussian quantile function to the sequence  
 
 $$\frac{1}{2n}, \frac{3}{2n}, ..., \frac{2i-1}{2n}, ..., \frac{2n - 1}{2n}$$
 
 which results in a discrete distribution which approaches a standard Gaussian 
 distribution as $n$ increases. A similar approach has been proposed 
 by @van1953neuer, who suggested using a sequence of equidistant points instead 
-of the sequence (). The differences between the resulting transformed ranks for
-two groups can in turn be modeled as a Gaussian distribution.  
-Via Bayesian estimation, a model with uninformative priors can be estimated in
-order to obtain a BEST-style hypothesis test.
+of the sequence above. The differences between the resulting transformed ranks 
+for two groups can in turn be modeled as a Gaussian distribution. As noted in
+@gelman2014bayesian, in this procedure, the difference between the two group 
+means translates to a mean distance in the quantiles of the combined 
+data.
+
+Via Bayesian estimation, a Gaussian model with uninformative priors can be 
+estimated in order to obtain a BEST-style hypothesis test. The properties of
+informative priors for this distribution are discussed in the following section.
 
 ### Prior Distributions
 
@@ -224,32 +296,147 @@ For both the paired and independent sample case, initial values for the MCMC
 are set to $\mu = 0$ and $\sigma = 1$, i.e., the values which are obtained 
 under the null hypothesis.
 
-## The bayes.wilcox.test Package
+### Model
+
+For the paired-sample test of the means of two groups $x$ and $y$, the procedure
+consists of first assigning ranks to the combined data, from $1$ to 
+$n = n_x + n_y$. These ranks are then transformed to quantiles of the standard
+Gaussian. The test models the differences of these transformed ranks as a 
+Gaussian distribution, with uniform priors for mean and variance.  
 
 
+```{r graphPaired, echo=FALSE, out.width = '55%'}
+knitr::include_graphics("oneSampleWilcoxDiagram.svg")
+```
 
-## Notes
+The two-sample test assigns transformed ranks as in the paired sample case, but
+models each group independently as a Gaussian with uniform priors. The 
+difference between the two groups is obtained as the difference between the 
+posterior distributions for both groups.  
 
-[@gelman2011bayesian, p.11]: "Even the Wilcoxon Test is based on assumptions!"
 
-Note: Consider Mann-Whitney Test! -> test for two independent groups, also
-included in wilcox.test function
+```{r graphTwo, echo=FALSE, out.width = '75%'}
+knitr::include_graphics("twoSampleWilcoxDiagram.svg")
+```
 
-Gelman (blog post): "the Wilcoxon test has a huge assumption which is that the 
-distributions are identical in the two groups. This is a much more important 
-assumption than normality." Cite blog post
 
-"History of the idea": [@van1953neuer] introduced concept, but used equidistant
-points instead of quantiles. [@gelman2014bayesian, p. 97] using quantiles
+## The bayesWilcoxTest Package
 
-[@kruschke2013bayesian, p. 575]: "In the case of data from a single
-group, including the case of a single group of difference scores
-from repeated measures on the same subjects, a modified model
-merely estimates $\mu$, $\sigma$, and $\nu$ of the group." Crucial change from
-independent two paired sample test: two different $\sigma$s vs. a single one
-See Kruschke's 2011 discussion of oneway / twoway ANOVA!
+The **bayesWilcoxTest** package is intended as an addition to the 
+**BayesianFirstAid** [@baath2014bayesian] package. As such, **bayesWilcoxTest**
+follows the structure of **BayesianFirstAid** functions, makes use of the 
+utility functions from **BayesianFirstAid**, and relies on modifying 
+**BayesianFirstAid** code for its S3 functions.  
+In addition, the package's main function, **bayes.wilcox.test**, was calibrated 
+in order to allow usage identical to R's built-in **wilcox.test** function.  
 
-Consider including effect size / How to deal with mu?
+The package can be obtained from the author's github page and installed 
+using the **devtools** package 
+(https://CRAN.R-project.org/package=devtools) via
+```{r eval = FALSE}
+require(devtools)
+install_github("joereinhardt/BayesianFirstAid-Wilcoxon")
+```
+
+## Examples
+
+This section uses the examples from R's built-in **wilcox.test** help file in
+order to display **bayesWilcoxTest**'s functionality.  
+
+### Paired Sample test
+The paired-sample dataset is taken from @hollander1973nonparametric, p.29f and
+concerns a dataset of Hamilton depression scale factor measurements before and 
+after therapy.  
+
+```{r}
+#Copied from the wilcox.test help file:
+# Hamilton depression scale factor measurements in 9 patients with
+#  mixed anxiety and depression, taken at the first (x) and second
+#  (y) visit after initiation of a therapy (administration of a
+#  tranquilizer).
+x <- c(1.83,  0.50,  1.62,  2.48, 1.68, 1.88, 1.55, 3.06, 1.30)
+y <- c(0.878, 0.647, 0.598, 2.05, 1.06, 1.29, 1.06, 3.14, 1.29)
+wilcox.test(x, y, paired = TRUE, alternative = "greater")
+```
+
+The **bayes.wilcox.test** function can be used in exactly the same way as the 
+classical function by prepending "bayes." to the original function call.  
+
+```{r}
+require(bayesWilcoxTest)
+hamiltonBayesWilcox <- bayes.wilcox.test(x, y, paired = TRUE,
+                                         alternative = "greater")
+
+#Print out concise information on the test
+print(hamiltonBayesWilcox)
+
+#Show a more detailed summary
+summary(hamiltonBayesWilcox)
+
+#Visual Inspection of the posterior
+plot(hamiltonBayesWilcox)
+
+#MCMC diagnostics
+diagnostics.bayes_paired_wilcox_test(hamiltonBayesWilcox)
+
+#Obtain model code in order to modify as needed
+model.code.bayes_paired_wilcox_test(hamiltonBayesWilcox)
+```
+
+Interpretation?
+
+### Two-sample Test
+The example dataset for the independent-sample test contains data from 
+@hollander1973nonparametric, p.69f on permeability of the human placental 
+membrame.  
+```{r}
+#Copied from the wilcox.test help file:
+# Permeability constants of the human chorioamnion (a placental
+#  membrane) at term (x) and between 12 to 26 weeks gestational
+#  age (y).  The alternative of interest is greater permeability
+#  of the human chorioamnion for the term pregnancy.
+x <- c(0.80, 0.83, 1.89, 1.04, 1.45, 1.38, 1.91, 1.64, 0.73, 1.46)
+y <- c(1.15, 0.88, 0.90, 0.74, 1.21)
+wilcox.test(x, y, alternative = "g")
+```
+
+Again, calling the original function while prepending "bayes." performs the
+Bayesian two-sample Wilcox:
+
+```{r, fig.width = 5, fig.height = 5}
+membraneBayesWilcox <- bayes.wilcox.test(x, y, alternative = "g")
+
+#Print out concise information on the test
+print(membraneBayesWilcox)
+
+#Show a more detailed summary
+summary(membraneBayesWilcox)
+
+#Visual Inspection of the posterior
+plot(membraneBayesWilcox)
+
+#MCMC diagnostics
+diagnostics.bayes_two_sample_wilcox_test(membraneBayesWilcox)
+
+#Obtain model code in order to modify as needed
+model.code.bayes_two_sample_wilcox_test(membraneBayesWilcox)
+```
+
+
+## Discussion
+The **bayesWilcoxTest** package adds a Bayesian alternative to the frequentist 
+**wilcox.test** function to the **BayesianFirstAid** package 
+[@baath2014bayesian]. The main function can be used identically to the 
+**wilcox.test** function by prepending "bayes." to the function call.  
+
+As with other BEST-style Bayesian hypothesis tests, the Bayesian Wilcoxon allows
+a straightforward interpretation of posterior mass as the probability of the 
+parameter value falling in a certain range. Compared to the frequentist tests,
+additional information is obtained: where a frequentist test that cannot reject 
+the null hypothesis provides no further information on the hypotheses at hand, 
+the Bayesian alternative gives an indication of which hypothesis can be 
+considered more likely given the observed data.  
+
 
 
 
