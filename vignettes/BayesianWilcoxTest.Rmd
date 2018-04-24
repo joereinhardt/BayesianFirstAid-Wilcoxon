@@ -437,6 +437,26 @@ the null hypothesis provides no further information on the hypotheses at hand,
 the Bayesian alternative gives an indication of which hypothesis can be 
 considered more likely given the observed data.  
 
+Naturally, all caveats concerning Bayesian hypothesis testing also apply to the 
+**bayesWilcoxTest** package. While the use of uninformative priors counters the
+common accusation of subjectivity in Bayesian methods, employing uniform 
+ignorance priors makes the assumption that all possible parameter values are 
+equally likely. @trafimow2005ubiquitous elaborates on problems with this 
+"Laplacian" assumption.
+
+The **bayesWilcoxTest** package implements a paired and independent sample test.
+In the built-in **wilcox.test** function, a one-sample test is available in
+addition to the paired and two sample tests. To find a Bayesian alternative 
+model for this is not straightforward. One possibility would be to create an
+artificial second data vector with the same length as the sample and containing
+the mean to be tested for all elements. The difference between the two vectors
+could then be modeled as in the paired sample test. A possible problem with this
+procedure lies in the assignment of tied ranks for all elements of the second 
+vector, which could be alleviated by adding an arbitrarily small random noise to
+each value. Still, since there would be practically no overlap between the two
+groups even if the null hypothesis is true, it remains to be tested whether this
+is a sensible procedure.
+
 
 
 
