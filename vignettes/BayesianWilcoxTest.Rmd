@@ -18,17 +18,16 @@ knitr::opts_chunk$set(
 )
 ```
 
-The **bayesWilcoxTest** R-package implements a Bayesian Alternative to the classical
+The **bayesWilcoxTest** R-package implements a Bayesian Alternative to the 
+classical
 Wilcoxon Rank test and is intended as an addition to the **BayesianFirstAid** 
-package [@baath2014bayesian]. As in the original Wilcoxon test, the data are 
-substituted by their ranks. Following @gelman2014bayesian, p. 97, the ranks
-are then transformed to the quantiles of a standard Gaussian
+package [@baath2014bayesian]. Following @gelman2014bayesian, p. 97, the ranks of
+the data are  transformed to the quantiles of a standard Gaussian
 distribution. This allows modeling the transformed data as a Gaussian
 distribution via Bayesian methods with uninformative priors. The resulting 
 posterior distribution can be interpreted similarly to the classical hypothesis
 test, but provides more detailed information and has a more straightforward
-interpretation.  
-The package implements a paired and independent sample test.  
+interpretation. The package implements a paired and independent sample test.  
 
 ## Introduction
 
@@ -149,7 +148,7 @@ sum of ranks to be expected if the overall ranks were equally distributed among
 $x$ and $y$, which corresponds to the null hypothesis of $x$ and $y$ having 
 the same mean. The expected sum for a given group is equal to the average rank
 assigned for a given sample size times the number of observations in the 
-group. For sample of $n_x = 8$ values in the first sample and $n_y = 4$ values
+group. For a sample of $n_x = 8$ values in the first sample and $n_y = 4$ values
 in the second sample for
 combined sample size of $n= n_x + n_y = 12$, the total sum of ranks
 is equal to $78$, with an average rank of $6.5$. Under the null hypothesis, the 
@@ -168,15 +167,15 @@ the frequentist Wilcoxon Rank test will be presented.
 
 ## The Bayesian Wilcoxon Rank Test
 
-The present section describes the estimation procedure for Bayesian Alternative 
-to the frequentist Wilcoxon Rank test, which is implemented by the
-**bayes.wilcox.test** package.
+The present section describes the estimation procedure for a Bayesian 
+Alternative to the frequentist Wilcoxon Rank test, which is implemented by the
+**bayesWilcoxTest** package.
 
 ### Nonlinear transformation to Gaussian quantiles
 
 The Bayesian Wilcoxon test follows an estimation procedure outlined in 
-@gelman2014bayesian and further described in a blog post by Andrew Gelman
-[@gelman2015dont]. As in the frequentist Wilcoxon 
+@gelman2014bayesian and further described in a blog post by Andrew 
+@gelman2015dont. As in the frequentist Wilcoxon 
 procedure, the data are substituted by their ranks in the combined sample. 
 Subsequently, the ranks are transformed to quantiles of a standard Gaussian 
 distribution by applying a Gaussian quantile function to the sequence  
@@ -197,6 +196,8 @@ estimated in order to obtain a BEST-style hypothesis test. The properties of
 informative priors for this distribution are discussed in the following section.
 
 ### Prior Distributions
+
+#### Two-sample Test
 
 For the two-sample case, both groups are modeled as independent Gaussian 
 distributions. Thus, prior distributions for the mean and variance of both 
@@ -236,8 +237,7 @@ and, due to symmetry of the quantile function, a highest possible mean of
 $$\mu_{max}(n) =  -\frac{1}{2}(\Phi^{-1}(\frac{1}{2n}) +
 \Phi^{-1}(\frac{3}{2n}))$$  
 
-The priors on the means for both groups are thus given by a uniform distribution
-... Since the 
+#### Paired sample test
 
 For the paired sample test, the single target posterior distribution is the 
 difference between the transformed ranks of both groups. Again, uniformly
@@ -330,13 +330,50 @@ utility functions from **BayesianFirstAid**, and relies on modifying
 In addition, the package's main function, **bayes.wilcox.test**, was calibrated 
 in order to allow usage identical to R's built-in **wilcox.test** function.  
 
-The package can be obtained from the author's github page and installed 
-using the **devtools** package 
-(https://CRAN.R-project.org/package=devtools) via
+### Installation
+
+The package can be obtained from github and installed using the **devtools**
+package (https://CRAN.R-project.org/package=devtools) via
 ```{r eval = FALSE}
 require(devtools)
 install_github("joereinhardt/BayesianFirstAid-Wilcoxon")
 ```
+
+### Functionality
+
+The package exports a main function, **bayes.wilcox.test**,
+for performing the paired and independent sample Bayesian Wilcoxon 
+along with several S3 functions which can be applied to the returned objects.  
+
+**bayes.wilcox.test**. Performs the Bayesian Wilcoxon, as a paired or 
+independent sample test, depending on the arguments used in the function call.
+First, some preliminary checks for consistency of the data are performed. The 
+function then applies the inverse Gaussian rank transformation to the data, and
+estimates the paired or independent sample model using the RJAGS package 
+(https://cran.r-project.org/package=rjags). The function returns a list of class 
+**"bayes_paired_wilcox_test"** or **"bayes_two_sample_wilcox_test"**, 
+respectively, containing information on the estimated model and samples from the
+posterior distribution generated by Markov Chain Monte Carlo (MCMC).  
+
+**print.bayes_paired_wilcox_test** and **print.bayes_two_sample_wilcox_test**.
+Prints out concise information on the Bayesian Wilcox test.  
+
+**summary.bayes_paired_wilcox_test** and 
+**summary.bayes_two_sample_wilcox_test**. Prints out a more detailed summary of
+the test.
+
+**plot.bayes_paired_wilcox_test** and **plot.bayes_two_sample_wilcox_test**.
+Provides a plot of the generated posterior distributions.
+
+**model.code.bayes_paired_wilcox_test** and 
+**model.code.bayes_two_sample_wilcox_test**.
+Prints out code which can be used to run the model exactly as in the main 
+function. This allows the test to be modified by the user.
+
+**model.code.bayes_paired_wilcox_test** and 
+**model.code.bayes_two_sample_wilcox_test**. Provides diagnostic information on
+the MCMC procedure, and includes trace plots of the modeled parameters.
+
 
 ## Examples
 
@@ -362,7 +399,7 @@ wilcox.test(x, y, paired = TRUE, alternative = "greater")
 The **bayes.wilcox.test** function can be used in exactly the same way as the 
 classical function by prepending "bayes." to the original function call.  
 
-```{r}
+```{r, fig.width = 5}
 require(bayesWilcoxTest)
 hamiltonBayesWilcox <- bayes.wilcox.test(x, y, paired = TRUE,
                                          alternative = "greater")
@@ -383,7 +420,6 @@ diagnostics.bayes_paired_wilcox_test(hamiltonBayesWilcox)
 model.code.bayes_paired_wilcox_test(hamiltonBayesWilcox)
 ```
 
-Interpretation?
 
 ### Two-sample Test
 The example dataset for the independent-sample test contains data from 
