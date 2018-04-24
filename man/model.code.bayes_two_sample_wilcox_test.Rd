@@ -7,7 +7,7 @@
 model.code.bayes_two_sample_wilcox_test(fit)
 }
 \arguments{
-\item{fit}{The output from a Bayesian First Aid model.}
+\item{fit}{The output from a two sample Bayesian Wilcox test model.}
 }
 \description{
 This is good if you better want to understand how the model is

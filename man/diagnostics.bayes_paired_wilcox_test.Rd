@@ -7,7 +7,7 @@
 diagnostics.bayes_paired_wilcox_test(x)
 }
 \arguments{
-\item{x}{The output from a Bayesian First Aid model.}
+\item{x}{The output from a paired sample Bayesian Wilcox test model.}
 }
 \description{
 Plots and prints diagnostics regarding the convergence of the model.

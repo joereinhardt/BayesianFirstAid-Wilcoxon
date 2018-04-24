@@ -16,7 +16,8 @@ bayes.wilcox.test(x, ...)
 
 \item{...}{further arguments to be passed to or from methods.}
 
-\item{y}{numeric vector of data values to be compared to x}
+\item{y}{numeric vector of data values to be compared to x. Unlike for the
+\code{\link{wilcox.test}} function, this argument is required.}
 
 \item{cred.mass}{the amount of probability mass that will be contained in
 reported credible intervals. This argument fills a similar role as
@@ -32,45 +33,56 @@ See 'Details'.}
 \item{alternative}{ignored, only retained in order to maintain compability
 with \code{\link{wilcox.test}}}
 
-\item{exact}{ignored, only retained in order to maintain compability
-with \code{\link{wilcox.test}}}
-
-\item{correct}{ignored, only retained in order to maintain compability
-with \code{\link{wilcox.test}}}
-
-\item{conf.int}{ignored, only retained in order to maintain compability
-with \code{\link{wilcox.test}}}
-
-\item{conf.level}{identical to cred.mass,
-ignored, only retained in order to maintain compability with
+\item{exact}{ignored, only retained in order to maintain compability with
 \code{\link{wilcox.test}}}
+
+\item{correct}{ignored, only retained in order to maintain compability with
+\code{\link{wilcox.test}}}
+
+\item{conf.int}{ignored, only retained in order to maintain compability with
+\code{\link{wilcox.test}}}
+
+\item{conf.level}{identical to cred.mass, ignored, only retained in order to
+maintain compability with \code{\link{wilcox.test}}}
 
 \item{progress.bar}{The type of progress bar. Possible values are "text",
 "gui", and "none".}
 }
 \value{
 A list of class \code{bayes_wilcox_test}. It can be further inspected
- using the functions \code{summary}, \code{plot}, \code{diagnostics}
- and \code{model.code}.
+  using the functions \code{print}, \code{summary}, \code{plot},
+  \code{\link{diagnostics.bayes_paired_wilcox_test}} and
+  \code{\link{model.code.bayes_paired_wilcox_test}}, or
+  \code{\link{diagnostics.bayes_two_sample_wilcox_test}} and
+  \code{\link{model.code.bayes_two_sample_wilcox_test}}, respectively.
 }
 \description{
-Function implements a bayesian alternative to the wilcoxon.test() function.
-Written as an addition to the Bayesian First Aid (BFA) package by
-Rasmus Bååth (https://github.com/rasmusab). BFA's structure is largely
-followed. S3 functions to be implemented as in BFA:
-print, plot, summary, model.code, and diagnostics.
-Method follows http://andrewgelman.com/2015/07/13/dont-do-the-wilcoxon/, and
-fits a normal model using JAGS after rank-transformation.
+Implements a Bayesian alternative to the \code{\link{wilcox.test}} function.
+Written as an addition to and based on the Bayesian First Aid package by
+Rasmus Bååth (2014). The method follows
+Gelman et al. (2014), and
+fits a normal model using JAGS after an inverse-normal rank-transformation.
 }
 \details{
-For the two-sample wilcox test, the posterior distribution is obtained as
-follows:
+The test performs an inverse-normal rank transformation on the data before
+the test models are run. This transformation is based on Gelman et al. (2014)
+and transforms the ranks of the data to quantiles of a standard Gaussian. See
+the package vignette for more details.
+
+If \code{paired = FALSE}, an independent (two) sample Wilcoxon test is
+performed.
+For the two-sample wilcox test, the posterior distribution is obtained from
+the following model:
 
 \figure{twoSampleWilcoxDiagram.svg}{options: height=400}
 
-Diagram for the one-sample test:
+If \code{paired = TRUE}, a paired sample test is run, with the following
+model structure:
 
 \figure{oneSampleWilcoxDiagram.svg}{options: height=275}
+
+If \code{mu} is given, the hypothesis that the inverse-normal rank
+transformed data are larger/smaller than \code{mu} is tested.
 }
 \examples{
 # Using examples copied from the wilcox.test help file:
@@ -124,8 +136,15 @@ wilcox.test(x, y, alternative = "greater")
 
 }
 \references{
+Rasmus Bååth (2014), “Bayesian First Aid: A Package That
+  Implements Bayesian Alternatives to the Classical *.Test Functions in R.”
+  In \emph{UseR! 2014 - the International R User Conference.}
+
+Andrew Gelman, John B Carlin, Hal S Stern,
+ David B Dunson, Aki Vehtari and Donald B Rubin (2014),
+ \emph{Bayesian Data Analysis}. 3rd ed. CRC press Boca Raton, FL. Page 97.
+
 Myles Hollander and Douglas A. Wolfe (1973), \emph{Nonparametric
-  Statistical Methods.} New York: John Wiley & Sons. Pages 27–33 (one-sample),
-  68–75 (two-sample).
-  Or second edition (1999).
+  Statistical Methods.} New York: John Wiley & Sons. Pages 27–33
+  (one-sample), 68–75 (two-sample). Or second edition (1999).
 }

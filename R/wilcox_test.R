@@ -1,49 +1,61 @@
 #' Bayesian First Aid Alternative to the Wilcoxon Rank Test
 #'
-#' Function implements a bayesian alternative to the wilcoxon.test() function.
-#' Written as an addition to the Bayesian First Aid (BFA) package by
-#' Rasmus Bååth (https://github.com/rasmusab). BFA's structure is largely
-#' followed. S3 functions to be implemented as in BFA:
-#' print, plot, summary, model.code, and diagnostics.
-#' Method follows http://andrewgelman.com/2015/07/13/dont-do-the-wilcoxon/, and
-#' fits a normal model using JAGS after rank-transformation.
+#' Implements a Bayesian alternative to the \code{\link{wilcox.test}} function.
+#' Written as an addition to and based on the Bayesian First Aid package by
+#' Rasmus Bååth (2014). The method follows
+#' Gelman et al. (2014), and
+#' fits a normal model using JAGS after an inverse-normal rank-transformation.
 #'
-#' For the two-sample wilcox test, the posterior distribution is obtained as
-#' follows:
+#' The test performs an inverse-normal rank transformation on the data before
+#' the test models are run. This transformation is based on Gelman et al. (2014)
+#' and transforms the ranks of the data to quantiles of a standard Gaussian. See
+#' the package vignette for more details.
+#'
+#' If \code{paired = FALSE}, an independent (two) sample Wilcoxon test is
+#' performed.
+#' For the two-sample wilcox test, the posterior distribution is obtained from
+#' the following model:
 #'
 #' \figure{twoSampleWilcoxDiagram.svg}{options: height=400}
 #'
-#' Diagram for the one-sample test:
+#' If \code{paired = TRUE}, a paired sample test is run, with the following
+#' model structure:
 #'
 #' \figure{oneSampleWilcoxDiagram.svg}{options: height=275}
 #'
+#' If \code{mu} is given, the hypothesis that the inverse-normal rank
+#' transformed data are larger/smaller than \code{mu} is tested.
+#'
 #' @param x numeric vector of data values
-#' @param y numeric vector of data values to be compared to x
+#' @param y numeric vector of data values to be compared to x. Unlike for the
+#'   \code{\link{wilcox.test}} function, this argument is required.
 #' @param cred.mass the amount of probability mass that will be contained in
-#'      reported credible intervals. This argument fills a similar role as
-#'      conf.level in \code{\link{wilcox.test}}
+#'   reported credible intervals. This argument fills a similar role as
+#'   conf.level in \code{\link{wilcox.test}}
 #' @param mu number specifying an optional paramter to form the null hypothesis.
-#'      See 'Details'.
+#'   See 'Details'.
 #' @param paired a logical indicating whether you want a paired test.
 #' @param n.iter The number of iterations to run the MCMC sampling.
 #' @param alternative ignored, only retained in order to maintain compability
-#'     with \code{\link{wilcox.test}}
-#' @param exact ignored, only retained in order to maintain compability
-#'     with \code{\link{wilcox.test}}
-#' @param correct ignored, only retained in order to maintain compability
-#'     with \code{\link{wilcox.test}}
-#' @param conf.int ignored, only retained in order to maintain compability
-#'     with \code{\link{wilcox.test}}
-#' @param conf.level identical to cred.mass,
-#'     ignored, only retained in order to maintain compability with
-#'     \code{\link{wilcox.test}}
+#'   with \code{\link{wilcox.test}}
+#' @param exact ignored, only retained in order to maintain compability with
+#'   \code{\link{wilcox.test}}
+#' @param correct ignored, only retained in order to maintain compability with
+#'   \code{\link{wilcox.test}}
+#' @param conf.int ignored, only retained in order to maintain compability with
+#'   \code{\link{wilcox.test}}
+#' @param conf.level identical to cred.mass, ignored, only retained in order to
+#'   maintain compability with \code{\link{wilcox.test}}
 #' @param progress.bar The type of progress bar. Possible values are "text",
-#'  "gui", and "none".
+#'   "gui", and "none".
 #' @param ... further arguments to be passed to or from methods.
 #'
 #' @return A list of class \code{bayes_wilcox_test}. It can be further inspected
-#'  using the functions \code{summary}, \code{plot}, \code{diagnostics}
-#'  and \code{model.code}.
+#'   using the functions \code{print}, \code{summary}, \code{plot},
+#'   \code{\link{diagnostics.bayes_paired_wilcox_test}} and
+#'   \code{\link{model.code.bayes_paired_wilcox_test}}, or
+#'   \code{\link{diagnostics.bayes_two_sample_wilcox_test}} and
+#'   \code{\link{model.code.bayes_two_sample_wilcox_test}}, respectively.
 #'
 #' @examples
 #' # Using examples copied from the wilcox.test help file:
@@ -95,10 +107,16 @@
 #' # Classical Wilcox Test for comparison
 #' wilcox.test(x, y, alternative = "greater")
 #'
+#' @references Rasmus Bååth (2014), “Bayesian First Aid: A Package That
+#'   Implements Bayesian Alternatives to the Classical *.Test Functions in R.”
+#'   In \emph{UseR! 2014 - the International R User Conference.}
+#' @references Andrew Gelman, John B Carlin, Hal S Stern,
+#'  David B Dunson, Aki Vehtari and Donald B Rubin (2014),
+#'  \emph{Bayesian Data Analysis}. 3rd ed. CRC press Boca Raton, FL. Page 97.
 #' @references Myles Hollander and Douglas A. Wolfe (1973), \emph{Nonparametric
-#'   Statistical Methods.} New York: John Wiley & Sons. Pages 27–33 (one-sample),
-#'   68–75 (two-sample).
-#'   Or second edition (1999).
+#'   Statistical Methods.} New York: John Wiley & Sons. Pages 27–33
+#'   (one-sample), 68–75 (two-sample). Or second edition (1999).
+
 #'
 #' @import coda
 #' @import rjags
@@ -114,7 +132,7 @@ bayes.wilcox.test <- function(x, ...){
   UseMethod("bayes.wilcox.test")
 }
 
-#Note: needs to take same input as wilcox.test()
+
 #' @export
 #' @rdname bayes.wilcox.test
 bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
@@ -182,7 +200,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   if (ny < 2)
     stop("not enough 'y' observations")
 
-  #Transform Data
+  #Transform Data to Inverse Normal Ranks
   ranks <- rank(c(x, y))
   ranksX <- ranks[1:nx]
   ranksY <- ranks[-(1:nx)]
@@ -192,7 +210,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   zRanksX <- zRanks[1:nx]
   zRanksY <- zRanks[-(1:nx)]
 
-  ### Running Model. Code adapted from BFA
+  ### Running Model using JAGS. Code adapted from BFA
   #Run model
   if (paired == TRUE) {
   mcmc_samples <- jags_paired_wilcox_test(zRanksX, zRanksY,
@@ -200,7 +218,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                           n.iter = ceiling(n.iter / 3),
                                           progress.bar = progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass,
-                      comp_val = mu)
+                      comp_val = mu) #mcmc_stats function from BFA's utilities
   #quick fix to get around utility function not assigning names if only one var
   rownames(stats) <- "mu_diff"
   bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu,
@@ -215,6 +233,7 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
                                          n.iter = ceiling(n.iter / 3),
                                          progress.bar = progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
+  #mcmc_stats function from BFA's utilities
   bfa_object <- list(x = x, y = y, comp = mu, cred_mass = cred.mass,
                      x_name = x_name, y_name = y_name, data_name = data_name,
                      x_data_expr = x_name, y_data_expr = y_name,
@@ -224,6 +243,8 @@ bayes.wilcox.test.default <- function(x, y, cred.mass = 0.95,
   }
   bfa_object
 }
+
+#Functions for running JAGS are outsourced to a separate function.
 
 #Paired-Sample model
 ####################
@@ -236,19 +257,21 @@ mu_diff ~ dunif(-1.6, 1.6)
 sigma_diff ~ dunif(0, sigma_high)
 }"
 
-#Figure out how/whether to include comp.mu!
 
-#Function for JAGS model
+
+#Function for paired JAGS model
 jags_paired_wilcox_test <- function(x, y, n.adapt = 1000,
                                     n.chains = 3, n.update = 500,
                                     n.iter = 5000, thin = 1,
                                     progress.bar = "text") {
   pair_diff <- x - y
   n <- length(x) + length(y)
+  #Standard JAGS structure.
   data_list <- list(pair_diff = pair_diff,
                     sigma_high = -2*qnorm(1/(2*n)))
-  inits_list <- list(mu_diff = 0)
+  inits_list <- list(mu_diff = 0, sigma_diff = 1)
   params <- c("mu_diff")
+  #Using run_jags function from BFA utilities
   mcmc_samples <- run_jags(paired_samples_wilcox_model_string,
                            data = data_list,
                            inits = inits_list,
@@ -265,6 +288,8 @@ jags_paired_wilcox_test <- function(x, y, n.adapt = 1000,
 
 #Two-sample model
 #################
+
+#JAGS model string
 two_sample_wilcox_model_string <- "model {
 for(i in 1:length(x)) {
   x[i] ~ dnorm( mu_x , sigma_x )
@@ -281,6 +306,7 @@ mu_y ~ dunif(mu_low, mu_high)
 sigma_y ~ dunif(0, sigma_high)
 }"
 
+#Function for two sample test, using run_jags function from BFA utilities
 jags_two_sample_wilcox_test <- function(x, y,
                                         n.adapt= 1000,
                                         n.chains = 3, n.update = 500,
@@ -310,12 +336,17 @@ jags_two_sample_wilcox_test <- function(x, y,
   mcmc_samples
 }
 
+############################################
+#S3 functions. All S3 functions are adapted
+#from BFA's bayes.t.test or bayes.binom.test
+#S3 functions
 
 ############################################
 ### Paired Sample Wilcox Test S3 Methods ###
 ############################################
 
 #' @export
+# Concise Information printout
 print.bayes_paired_wilcox_test <- function(x, ...) {
   s <- format_stats(x$stats)
 
@@ -342,6 +373,7 @@ print.bayes_paired_wilcox_test <- function(x, ...) {
 
 #' @method summary bayes_paired_wilcox_test
 #' @export
+# More detailed summary printout
 summary.bayes_paired_wilcox_test <- function(object, ...) {
   s <- round(object$stats, 3)
 
@@ -352,7 +384,8 @@ summary.bayes_paired_wilcox_test <- function(object, ...) {
 
   #print_bayes_two_sample_t_test_params(object) #Replace by shorter:
   cat("  Model parameters and generated quantities\n")
-  cat("mu_diff: the difference in means of ", object$x_name, "and",
+  cat("mu_diff: the difference in means of the inverse-normal transformed ranks
+      of", object$x_name, "and",
       object$y_name, "\n")
   cat("\n")
 
@@ -371,7 +404,7 @@ summary.bayes_paired_wilcox_test <- function(object, ...) {
   invisible(object$stats)
 }
 
-#adapted from plot.bayes_binom_test
+#adapted from plot.bayes_binom_test. Plots the posterior MCMC samples
 #' @export
 plot.bayes_paired_wilcox_test <- function(x, ...) {
   old_par <- par(mar = c(3.5,3.5,2.5,0.5),
@@ -385,7 +418,7 @@ plot.bayes_paired_wilcox_test <- function(x, ...) {
   xlim = range(c(sample_mat[,"var1"], x$comp))
   plotPost(sample_mat[,"var1"], cred_mass = x$cred_mass,
            comp_val = x$comp, xlim = xlim, cex = 1, cex.lab = 1.5,
-           main = "Difference in means",
+           main = "Difference in means of the quantile-rank transformed data",
            xlab = bquote(mu[diff]), show_median = TRUE)
   par(old_par)
   invisible(NULL)
@@ -398,7 +431,7 @@ plot.bayes_paired_wilcox_test <- function(x, ...) {
 #' implemented or if you want to run a modified version of the code.
 #'
 #' @export
-#' @param fit The output from a Bayesian First Aid model.
+#' @param fit The output from a paired sample Bayesian Wilcox test model.
 
 
 # Note: function not recognized as S3, needs to be called by
@@ -433,8 +466,12 @@ paired_samples_wilcox_model_code <- function(pair_diff) {
   # and standard deviation (MAD).
   inits_list <- list(mu_diff = mean(pair_diff, trim = 0.2))
 
-  data_list <- list(
-    pair_diff = pair_diff)
+  n <- length(pair_diff)
+  #Standard JAGS structure.
+  data_list <- list(pair_diff = pair_diff,
+                    sigma_high = -2*qnorm(1/(2*n)))
+  inits_list <- list(mu_diff = 0, sigma_diff = 1)
+
 
   # The parameters to monitor.
   params <- c("mu_diff")
@@ -458,7 +495,7 @@ paired_samples_wilcox_model_code <- inject_model_string(
 #adapted from diagnostics.bayes_two_sample_t_test
 #' Plots and prints diagnostics regarding the convergence of the model.
 #'
-#' @param x The output from a Bayesian First Aid model.
+#' @param x The output from a paired sample Bayesian Wilcox test model.
 #' @export
 
 diagnostics.bayes_paired_wilcox_test <- function(x) {
@@ -467,7 +504,8 @@ diagnostics.bayes_paired_wilcox_test <- function(x) {
   print_diagnostics_measures(round(x$stats, 3))
   cat("\n")
   cat("Model parameters and generated quantities\n")
-  cat("mu_diff: the difference in means of ", x$x_name, "and",
+  cat("mu_diff: the difference in means of the quantile-rank transformed data",
+      x$x_name, "and",
       x$y_name, "\n")
 
   cat("\n")
@@ -484,6 +522,7 @@ diagnostics.bayes_paired_wilcox_test <- function(x) {
 ### Two Sample Wilcox Test S3 Methods ###
 #########################################
 
+#Concise printout.
 #' @export
 print.bayes_two_sample_wilcox_test <- function(x, ...) {
   s <- format_stats(x$stats)
@@ -513,6 +552,7 @@ print.bayes_two_sample_wilcox_test <- function(x, ...) {
   invisible(NULL)
 }
 
+#More detailed summary printout.
 #' @method summary bayes_two_sample_wilcox_test
 #' @export
 summary.bayes_two_sample_wilcox_test <- function(object, ...) {
@@ -525,10 +565,10 @@ summary.bayes_two_sample_wilcox_test <- function(object, ...) {
 
   #print_bayes_two_sample_t_test_params(object) #Replace by shorter:
   cat("  Model parameters and generated quantities\n")
-  cat("mu_x: the mean of QUANTILE-RANK TRANSFORMED", object$x_name, "\n")
-  cat("mu_diff: the difference in means of ", object$x_name, "and",
+  cat("mu_x: the mean of the quantile-rank transformed", object$x_name, "\n")
+  cat("mu_diff: the mean of the quantile-rank transformed ", object$x_name, "and",
       object$y_name, "\n")
-  cat("mu_y: the mean of", object$y_name, "\n")
+  cat("mu_y: the mean of the quantile-rank transformed", object$y_name, "\n")
   cat("\n")
 
   cat("  Measures\n" )
@@ -546,6 +586,7 @@ summary.bayes_two_sample_wilcox_test <- function(object, ...) {
   invisible(object$stats)
 }
 
+#Plots the posterior MCMC samples
 #' @export
 plot.bayes_two_sample_wilcox_test <- function(x, ...) {
   stats <- x$stats
@@ -560,7 +601,8 @@ plot.bayes_two_sample_wilcox_test <- function(x, ...) {
                   3, 2) , nrow = 2, byrow = FALSE))
   par(mar = c(3.5,3.5,2.5,0.51) , mgp = c(2.25,0.7,0) )
 
-  # Plot posterior distribution of parameters mu_x, mu_y, and their difference:
+  # Plot posterior distribution of parameters of the quantile-rank transformed
+  # mu_x, mu_y, and their difference:
   xlim = range(c(mu_x , mu_y))
   plotPost(mu_x,  xlim = xlim, cex.lab = 1.75, cred_mass = x$cred_mass,
            show_median = TRUE, xlab = bquote(mu[x]),
@@ -581,7 +623,7 @@ plot.bayes_two_sample_wilcox_test <- function(x, ...) {
 #' This is good if you better want to understand how the model is
 #' implemented or if you want to run a modified version of the code.
 #'
-#' @param fit The output from a Bayesian First Aid model.
+#' @param fit The output from a two sample Bayesian Wilcox test model.
 #' @export
 model.code.bayes_two_sample_wilcox_test <- function(fit) {
   cat("### Model code for the Bayesian First Aid alternative to the Wilcox",
@@ -610,8 +652,13 @@ two_sample_wilcox_model_code <- function(x, y) {
     sigma_x = 1,
     sigma_y = 1)
 
+  #Setting parameters for the priors
+  n <- length(x) + length(y)
   data_list <- list(x = x,
-                    y = y)
+                    y = y,
+                    mu_low = qnorm(1/(2*n)),
+                    mu_high = qnorm((2*n - 1)/(2*n)),
+                    sigma_high = -qnorm(1/(2*n)))
 
   # The parameters to monitor.
   params <- c("mu_x", "mu_y", "mu_diff")
@@ -633,7 +680,7 @@ two_sample_wilcox_model_code <- inject_model_string(
 #adapted from diagnostics.bayes_two_sample_t_test
 #' Plots and prints diagnostics regarding the convergence of the model.
 #'
-#' @param x The output from a Bayesian First Aid model.
+#' @param x The output from a two sample Bayesian Wilcox test model.
 #' @export
 # Note: function not recognized as S3, needs to be called by
 # model.code.bayes_wilcox_test()
@@ -644,10 +691,11 @@ diagnostics.bayes_two_sample_wilcox_test <- function(x) {
   print_diagnostics_measures(round(x$stats, 3))
   cat("\n")
   cat("  Model parameters and generated quantities\n")
-  cat("mu_x: the mean of QUANTILE-RANK TRANSFORMED", x$x_name, "\n")
-  cat("mu_diff: the difference in means of ", x$x_name, "and",
+  cat("mu_x: the mean of the quantile-rank transformed", x$x_name, "\n")
+  cat("mu_diff: the difference in means of the quantile-rank
+      transformed", x$x_name, "and",
       x$y_name, "\n")
-  cat("mu_y: the mean of", x$y_name, "\n")
+  cat("mu_y: the mean of the quantile-rank transformed", x$y_name, "\n")
   cat("\n")
 
   old_par <- par( mar = c(3.5,2.5,2.5,0.5) , mgp = c(2.25,0.7,0) )
